@@ -1,0 +1,2637 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bosiango Exam Analyzer (Test)</title>
+<link rel="manifest" href="data:application/manifest+json,{%22name%22:%22Bosiango%20Exam%20Analyzer%20(Test)%22,%22short_name%22:%22Bosiango%20Test%22,%22display%22:%22standalone%22,%22start_url%22:%22.%22,%22background_color%22:%22%23ffffff%22,%22theme_color%22:%22%231B2A4A%22}">
+<style>
+  :root{
+    --navy:#1B2A4A; --navy-soft:#3A4A6B; --navy-faint:#EEF1F7; --navy-line:#C7CEDD; --gold:#B08D3F;
+    --ee:#1B7A4A; --me:#1B5A8A; --ae:#B08D3F; --be:#A3402F; --gray:#9AA3B5;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:Georgia,'Times New Roman',serif;background:#fff;color:var(--navy);}
+  header{border-bottom:1px solid var(--navy);}
+  .wrap{max-width:1000px;margin:0 auto;padding:0 16px;}
+  .headrow{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;padding:14px 0;}
+  .brand{display:flex;align-items:center;gap:10px;}
+  .logo-badge{width:42px;height:42px;border-radius:50%;border:2px solid var(--navy);display:flex;align-items:center;justify-content:center;overflow:hidden;cursor:pointer;background:#fff;flex-shrink:0;}
+  .logo-badge img{width:100%;height:100%;object-fit:cover;}
+  h1{font-size:19px;margin:0;font-weight:bold;letter-spacing:.3px;}
+  .subtitle{font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:var(--navy-soft);margin:2px 0 0;}
+  .save-status{font-size:11px;color:var(--navy-soft);display:flex;align-items:center;gap:4px;}
+  nav{display:flex;gap:2px;overflow-x:auto;}
+  nav button{background:none;border:none;border-bottom:2px solid transparent;padding:10px 14px;font-size:13px;font-weight:600;color:var(--navy-line);cursor:pointer;white-space:nowrap;font-family:inherit;}
+  nav button.active{color:var(--navy);border-color:var(--navy);}
+  main{max-width:1000px;margin:0 auto;padding:20px 16px 60px;}
+  .btn{display:inline-flex;align-items:center;gap:6px;border:none;border-radius:2px;padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;background:var(--navy);color:#fff;}
+  .btn.outline{background:#fff;border:1px solid var(--navy);color:var(--navy);}
+  .btn.sm{padding:6px 10px;font-size:12px;}
+  .row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+  .between{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:14px;}
+  label.field-label{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--navy-soft);display:block;margin-bottom:4px;}
+  input[type=text], input[type=number], select, input.plain{font-family:inherit;font-size:13px;padding:7px 9px;border:1px solid var(--navy-line);border-radius:2px;color:var(--navy);background:#fff;}
+  .grid-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;}
+  .card{border:1px solid var(--navy-line);border-radius:2px;padding:10px;display:flex;align-items:center;gap:10px;}
+  .avatar{width:40px;height:40px;border-radius:50%;background:var(--navy-faint);color:var(--navy);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:bold;border:1px solid var(--navy-line);flex-shrink:0;overflow:hidden;cursor:pointer;}
+  .avatar img{width:100%;height:100%;object-fit:cover;}
+  table{width:100%;border-collapse:collapse;font-size:12px;}
+  thead tr{background:var(--navy);color:#fff;}
+  th,td{padding:7px 8px;text-align:left;border-top:1px solid var(--navy-line);}
+  th{border-top:none;}
+  tr.zebra{background:var(--navy-faint);}
+  /* Reports/exports stay light â€” navy text and thin borders on white,
+     no dark fills, so they photocopy/print cleanly for official use. */
+  #printable thead tr{background:#fff;color:var(--navy);}
+  #printable th{border-bottom:2px solid var(--navy);font-weight:700;}
+  .grade-pill{display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;padding:1px 7px;border-radius:2px;min-width:28px;border:1px solid;}
+  .pos{font-size:12px;font-weight:700;}
+  .chart-card{border:1px solid var(--navy-line);border-radius:2px;padding:10px;margin-bottom:14px;}
+  .chart-card h3{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--navy-soft);margin:0 0 8px;}
+  .barchart{display:flex;align-items:flex-end;gap:6px;height:160px;padding-top:10px;}
+  .bar-col{flex:1;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;min-width:0;}
+  .bar{width:70%;min-height:2px;background:var(--navy);border-radius:2px 2px 0 0;}
+  .bar-val{font-size:9px;color:var(--navy-soft);margin-bottom:2px;}
+  .bar-label{font-size:8px;color:var(--navy-soft);margin-top:4px;writing-mode:vertical-rl;text-orientation:mixed;max-height:60px;overflow:hidden;}
+  .empty{border:1px dashed var(--navy-line);border-radius:2px;padding:50px 20px;text-align:center;color:var(--navy-soft);font-size:13px;}
+  .term-icons{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px;}
+  .term-icon{display:flex;flex-direction:column;align-items:center;gap:5px;padding:14px 18px;border:1px solid var(--navy-line);border-radius:2px;cursor:pointer;min-width:90px;background:#fff;font-family:inherit;}
+  .term-icon.active{background:var(--navy);border-color:var(--navy);border-width:2px;}
+  .term-icon.active span{color:#fff !important;}
+  .term-icon span{font-size:12px;font-weight:600;color:var(--navy);}
+  .term-icon small{font-size:9px;color:var(--navy-line);}
+  .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;z-index:100;padding:16px;}
+  .modal-box{background:#fff;border:1px solid var(--navy-line);border-radius:2px;padding:20px;width:100%;max-width:380px;}
+  .modal-box.wide{max-width:640px;max-height:90vh;overflow-y:auto;}
+  .modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px;}
+  .subject-teacher-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;margin-top:10px;}
+  .subject-teacher-row{display:flex;align-items:center;gap:8px;border:1px solid var(--navy-line);border-radius:2px;padding:8px;}
+  .subject-teacher-row span{font-size:11px;font-weight:700;width:90px;flex-shrink:0;}
+  .subject-teacher-row input{flex:1;border:none;border-bottom:1px solid var(--navy-line);background:transparent;min-width:0;}
+  .icon{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;flex-shrink:0;}
+  .expand-panel{background:var(--navy-faint);}
+  .subj-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;}
+  .subj-field label{font-size:9px;text-transform:uppercase;color:var(--navy-soft);display:block;margin-bottom:3px;}
+  .subj-field input{width:70px;font-size:12px;padding:4px 6px;}
+  .report-card{background:#fff;max-width:640px;width:100%;border:1px solid var(--navy-line);border-radius:2px;padding:24px;}
+  .report-card.wide{padding:12px 8px;}
+  .report-card.wide h2, .report-card.wide h1{margin-left:8px;margin-right:8px;}
+  .report-card table{margin-bottom:14px;}
+  .report-card th{font-size:10px;}
+  .report-close-row{display:flex;justify-content:flex-end;gap:8px;margin-bottom:10px;}
+  .print-only{display:none;}
+  @media print{
+    body > *:not(#reportRoot){display:none !important;}
+    #reportRoot{display:block !important;}
+    #reportRoot .modal-overlay{position:static !important;display:block !important;background:none !important;padding:0 !important;}
+    #printable{width:100%;}
+    .no-print{display:none !important;}
+    .print-page-break{page-break-after:always;break-after:page;}
+  }
+  footer{max-width:1000px;margin:0 auto;padding:30px 16px;text-align:center;font-size:11px;color:var(--navy-line);}
+  .small-note{font-size:11px;color:var(--navy-soft);margin-bottom:10px;}
+  .delta-up{color:var(--ee);font-weight:700;}
+  .delta-down{color:var(--be);font-weight:700;}
+  .delta-flat{color:var(--navy-soft);}
+</style>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+</head>
+<body>
+
+<header>
+  <div class="wrap headrow">
+    <div class="brand">
+      <button class="logo-badge" id="logoBadge" title="Tap to set school logo">
+        <svg class="icon" viewBox="0 0 24 24" id="logoPlaceholderIcon"><path d="M22 10v6M2 10l10-5 10 5-10 5-10-5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+        <img id="logoImg" style="display:none;">
+      </button>
+      <div>
+        <h1>BOSIANGO COMPREHENSIVE SCHOOL</h1>
+        <p class="subtitle" id="headerSubtitle">BOSIANGO 2026 Assessment â€” Grade 6</p>
+      </div>
+    </div>
+    <div class="save-status" id="saveStatus"></div>
+    <div class="save-status" id="syncStatus"></div>
+  </div>
+  <div class="wrap" id="gradeSelectorRow" style="padding-bottom:10px;"></div>
+  <nav class="wrap" id="tabNav"></nav>
+</header>
+
+<main id="mainContent"></main>
+
+<footer>Data is saved automatically and synced across your devices while online.</footer>
+
+<input type="file" id="csvInput" accept=".csv" style="display:none;">
+<input type="file" id="photoInput" accept="image/*" style="display:none;">
+<input type="file" id="logoInput" accept="image/*" style="display:none;">
+<input type="file" id="importInput" accept=".json" style="display:none;">
+
+<div id="modalRoot"></div>
+<div id="reportRoot"></div>
+<div id="lockRoot"></div>
+
+<script>
+/* =========================================================
+   CONSTANTS
+========================================================= */
+const UPPER_PRIMARY_SUBJECTS = ["MATHEMATICS","ENGLISH","KISWAHILI","SST","C.R.E","SCI & TECH","AGR/NUTRI","CAS"];
+const LOWER_PRIMARY_SUBJECTS = ["MATHEMATICS","ENGLISH","KISWAHILI","C.R.E","C/A & PHE","ENVIRONMENTAL ACTIVITIES"];
+const JUNIOR_SECONDARY_SUBJECTS = ["MATHEMATICS","ENGLISH","KISWAHILI","INTEGRATED SCIENCE","PRE-TECHNICAL","C/A AND SPORTS","AGR/NUTRI","C.R.E","SOCIAL STUDIES"];
+function subjectsForGrade(g){
+  if(g==="Grade 1"||g==="Grade 2"||g==="Grade 3") return LOWER_PRIMARY_SUBJECTS;
+  if(g==="Grade 7"||g==="Grade 8"||g==="Grade 9") return JUNIOR_SECONDARY_SUBJECTS;
+  return UPPER_PRIMARY_SUBJECTS;
+}
+let SUBJECTS = UPPER_PRIMARY_SUBJECTS;
+const TERMS = ["Term 1","Term 2","Term 3"];
+const GRADES = ["Grade 1","Grade 2","Grade 3","Grade 4","Grade 5","Grade 6","Grade 7","Grade 8","Grade 9"];
+const GRADE_BANDS = [
+  {min:90,max:100,points:8,band:"EE"},{min:75,max:89,points:7,band:"EE"},
+  {min:58,max:74,points:6,band:"ME"},{min:41,max:57,points:5,band:"ME"},
+  {min:31,max:40,points:4,band:"AE"},{min:21,max:30,points:3,band:"AE"},
+  {min:11,max:20,points:2,band:"BE"},{min:1,max:10,points:1,band:"BE"},
+  {min:0,max:0,points:0,band:"-"}
+];
+const GRADE_COLORS = {EE:"#1B7A4A",ME:"#1B5A8A",AE:"#B08D3F",BE:"#A3402F","-":"#9AA3B5"};
+const LEVEL_NUM = {EE:4,ME:3,AE:2,BE:1,"-":"-"};
+const REPORT_COMMENTS = {
+  EE:"{first} is performing exceptionally well this term, exceeding expectations across most learning areas. Keep up the excellent effort and continue challenging yourself.",
+  ME:"{first} is meeting expectations this term and shows a solid grasp of the content covered. Continued consistent effort will help push these results even higher.",
+  AE:"{first} is approaching expectations this term. With more consistent practice and support in the weaker subject areas, steady improvement is achievable next term.",
+  BE:"{first} is below expectations this term and needs closer support at home and school to strengthen the foundational skills across subjects.",
+  "-":"{first}'s results this term need review."
+};
+const SUBJECT_COMMENTS = {
+  EE:"Excellent grasp of the content.",
+  ME:"Good, consistent work.",
+  AE:"Needs more practice.",
+  BE:"Requires close support.",
+  "-":"No score recorded."
+};
+const SUBJECT_COMMENTS_KISWAHILI = {
+  EE:"Anazidi matarajio â€” ufahamu bora wa somo.",
+  ME:"Kazi nzuri na ya kuridhisha.",
+  AE:"Anahitaji mazoezi zaidi.",
+  BE:"Anahitaji msaada wa karibu.",
+  "-":"Hakuna alama iliyorekodiwa."
+};
+const STORE_KEY = "bosiango-cbc-tracker-v1";
+const LOCK_KEY = "bosiango-app-lock-pw"; // stored only on this device, never synced
+
+/* =========================================================
+   LIVE SYNC â€” via the Claude "db" runtime capability, so this
+   artifact stays in sync across every device/browser where
+   Caroline opens the same published link (Chrome on desktop
+   included), instead of the old per-device-only localStorage.
+========================================================= */
+const SYNC_DOC_PATH = "sync/state";
+const PENDING_SYNC_KEY = "bosiango-cloud-pending";
+let SYNC_ENABLED = false; // becomes true once the db capability connects
+let dbNS = null;
+let dbUnsub = null;
+let syncApplyingRemote = false; // guards against write-loop while applying a remote update
+let cloudWriteChain = Promise.resolve();
+let cloudWriteQueued = false;
+let cloudDirty = false; // true = local marks not yet confirmed saved to the shared copy
+try{ cloudDirty = localStorage.getItem(PENDING_SYNC_KEY) === "1"; }catch(e){}
+function markCloudDirty(){
+  cloudDirty = true;
+  try{ localStorage.setItem(PENDING_SYNC_KEY, "1"); }catch(e){}
+}
+function clearCloudDirty(){
+  cloudDirty = false;
+  try{ localStorage.removeItem(PENDING_SYNC_KEY); }catch(e){}
+}
+
+const ICONS = {
+  users:'<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+  pen:'<path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>',
+  bar:'<line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/>',
+  calendar:'<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>',
+  arrows:'<path d="M17 3 21 7l-4 4"/><path d="M3 7h18"/><path d="M7 21 3 17l4-4"/><path d="M21 17H3"/>',
+  plus:'<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>',
+  trash:'<polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>',
+  upload:'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>',
+  download:'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>',
+  chevronDown:'<polyline points="6 9 12 15 18 9"/>',
+  chevronRight:'<polyline points="9 18 15 12 9 6"/>',
+  x:'<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>',
+  printer:'<polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/>',
+  check:'<polyline points="20 6 9 17 4 12"/>',
+  save:'<path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>',
+  alert:'<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>',
+  trophy:'<path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4Z"/><path d="M5 4h2v3a3 3 0 0 1-3-3Z"/><path d="M19 4h-2v3a3 3 0 0 0 3-3Z"/>'
+};
+function icon(name, size){
+  size = size || 15;
+  return '<svg class="icon" style="width:'+size+'px;height:'+size+'px" viewBox="0 0 24 24">'+ICONS[name]+'</svg>';
+}
+
+/* =========================================================
+   STATE
+========================================================= */
+let state = {
+  currentGrade: "Grade 6",
+  grades: {},
+  schoolLogo: null,
+  // "working view" â€” always mirrors grades[currentGrade]; existing code
+  // throughout the app reads/writes these directly, unchanged.
+  students: [],
+  assessments: [],
+  className: "Grade 6",
+  subjectTeachers: {},
+  classTeacher: ""
+};
+let ui = {
+  activeTab: "roster",
+  selectedAssessmentId: null,
+  mySubject: SUBJECTS[0],
+  compareA: null,
+  compareB: null,
+  expandedStudent: null,
+  selectedTerm: "Term 1"
+};
+
+/* =========================================================
+   SEED DATA
+========================================================= */
+const SEED_STUDENTS = [
+["EZRA MONGARE",62,38,54,50,67,60,58,48],["DEBORAH MORARA",64,44,48,40,61,44,46,38],
+["JOSECK NYANUMBA",76,72,58,48,76,60,62,46],["DEBORAH ONYANCHA",58,36,34,34,55,44,40,32],
+["SAMWEL MAERI",30,32,26,28,40,34,26,32],["GLADYS ONYANCHA",54,38,46,26,61,48,40,40],
+["ANNIVA KWAMBOKA",68,74,56,60,85,66,68,56],["MARION NYABOKE",64,54,40,32,52,44,38,34],
+["JOYCE NYAMOITA",30,16,22,32,37,42,30,16],["RUTH MORAA",50,36,42,36,46,46,44,40],
+["SARAH KERUBO",38,16,30,28,52,44,42,34],["FAITH MOGAKA",26,28,34,36,25,38,34,24],
+["MAXWEL ONGAGA",34,28,38,32,61,36,32,32],["JUSTINE OSORO",30,44,36,42,37,48,22,28],
+["JARED MOMANYI",34,26,16,18,40,30,28,24],["MOSES ORUTWA",32,28,14,22,34,34,28,30],
+["PURITY KWAMBOKA",52,34,46,16,46,42,30,20],["RUTH NYABOKE",70,68,64,64,91,64,68,56],
+["GRACE KWAMBOKA",64,72,56,50,79,62,58,46],["AUGOSTINE ORUTWA",40,26,22,28,34,28,26,30],
+["HESBON ONYANCHA",30,14,28,28,34,46,30,28],["SAMWEL MARAGIA",34,36,48,24,37,38,58,20],
+["PURITY MORAA",34,30,32,34,43,40,30,14],["JEREMIAH ONTUMBI",18,20,18,28,25,24,28,24],
+["STACY NYABOKE",64,50,42,46,54,48,40,30],["NIMROD KABUGI",28,10,14,40,37,44,16,26]
+];
+const ROSTERS = {
+  "Grade 1": ["JAMES OMAYO","GLORY ELIJAH","SHALINE MANDERE","JAYDEN OSINDE","JAMES MAYAKA","NAOM NYABOKE","ELIZABETH ARASA","RICHARD MACHOGU","BRAVIN ONDARI","NYANGWESO KIAGE","NICODEMUS RATEMO","SAMWEL ORINA","PAULINE MOSETI","ENOCK ELIJAH","MARIA NYAKAMBA","DEPORAH MOGAKA","DORCA NYANG'AU","GLORIA ARASA","SHANTEL KERUBO","MITCHELLE BOKO","OLIVIA OGAO"],
+  "Grade 2": ["VIVIAN ONYINGE","ELIZABETH OMITI","DEBORAH ASUGA","EGRA KEMUNTO","HILDAH NYACHIENGA","SHALINE NYABOKE","NEMLODE NYACHIENGA","FRANCIS OKONG'O","ENOCK NYAPORO","ISAAC ANURI","BOAZ ONYANCHA ABUGA","INGRAM FRANK","DAVIS OGAO","HENRY NYANDEGE","PETER ABUGA","ISAAC OMBAGI"],
+  "Grade 3": ["MARYVINE MORARA","EMMANUEL MUNENE","ADRIAN ATOTO","FELIX ARASA","ALEXINA GIDION","ISAAC OUNYA","BRENDAH MORARA","EVANS ORUTWA","DEBORAH ABUYA","PRECIOUS KWAMBOKA","VALENTINE MORAA","HELLEN OMORI","KEVIN ONG'ONDI","SHANTEL MORAA"],
+  "Grade 4": ["PURITY KEMOSI","GRACE GIDEON","MELVINE ORINA","OBAMA MOSETI","BRIAN NYAMUMBO","NATHAN ABUGA","SARAH OMWOYO","CLIFFORD NYAKUNDI","ALEXINA JAMES","COLLINS MORIASI","MOKEIRA BENARD","SHARON ONGUSO","FELIX ORANG'O","PHILIP ABUGA","OBED OMARE","OBED MUMA","MATHEW MOYWAYWA","APOLINARIS ASANYO","PITIOUS NYABOKE","VINGAH ORANG'O","ANDREW ACHOKI","AGNES NYABOGA","BIVON NYATIGO","EDRIAN NYABOGA","BLESSINGS MIGIRO","BRIGHTON GICHANA","EMMANUEL MOKAYA"],
+  "Grade 5": ["EMMANUEL MOMANYI","WENDY BIYEKE","PHILES JOB","BRAVIN ABUGA","CALVIN BOKOO","YVONNE KIAGE","RURTH NYAMBANE","FAITH MONG'ARE","ESTHER ONYANCHA","VIVIAN NYABIAGE","ESTHR NYANUMBA","ELIZABETH NYANG'AU","BLESSINGS ORINA","BRIGHTON ONYANCHA","PREECIOUS GESARE","THABITHA NYAPORO","FAITH NYANDUKO","MARY GESARE","JUSTINE OMITI","FIDEL ARASA","ABIGAEL ARASA","JULIET ONYINGE","BRIGHTON OKONG'O","CHARLES NYAMBANE"],
+  "Grade 7": ["RUTH KEMUNTO MORARA","RUTH NYANCHOKA","SHARON MORAA ROGITO","ABIGAEL NYABOKE SAGWE","DORCAH MATOKE NYAKAMBA","VANE NYANCHAMA BUNDI","EUNICE NJERI ONCHURU","DEBORAH BONARERI","MARION MORAA OMWANGO","SAULINE NYOMENDA MOSETI","CAUDENCE MORAA MONG'ARE","REBECCAH KEREBI ONGWAE","MONICAH NYARINDA ARASA","SHEILAH NYARANDA","DINAH KWAMBOKA OGAO","MISHEL KEMUNTO MOGAKA","MARION KWAMBOKA ORUTWA","FAITH KERUBO EBETHUEL","GRACIOUS KEMUNTO ORUTWA","CYNTIA MOKEIRA MOMANYA","VIVIAN MORAA OMITI","VARIAN BOSIBORI ORUTWA","STAFFORD OKINYI MASI","JOSEPH NYANDEGA OWNYA","SOSPETER ONDARI OCHENGO","MARK AGWATA NYAKAMBA","EZRA ONKEO KEBAGENDI","CHARLES NYABUTI ARASA","HILLARY ONYINGE OTISO","WYCLIFFE ONYANCHA NYAMOI","JOSHUA ORANG'O ONYINGE","EZRA KIAGE KUINDU","VINCENT KEMOSI CHANDI","JOB ORANG'O ASUGA","JAMES NYAKUNDI","BRAVIN NYAMWEYA ANASI","BRIAN NYAKANG'O BOSIRE","JOSEPH ACHIRA OKERIO","JACKSON GISORE MOSE","CALEB OMORO ONG'ERA","CYPRIAN NYAMOSI ONYANCHA","ENOSH FESTUS ORUTWA","OSCAH MURIMI JOSHUA","DOMINIC ARIEMBA ORINA","SAMUEL NYAMWEYA","CALEB ONDIEKI MANYINSA","AMOS MOYWAYWA MORARA","NEHEMIAH NYATIGO"],
+  "Grade 8": ["ALICE NYABOKE ORUTWA","BRIAN NYANDEGE ORINA","BRIAN NYARWATI BUNDI","BRITNEY KEMUNTO","CHRISTINE NYABOKE RAILA","CLINTON ACHOKI MASIRA","CLINTON NYAKUNDI OGINDA","DAPHINE SALOME NYAKUNDI","DAVIS MOSOMI","DEBORAH KERUBO OKERI","DIVINAH NYABOKE KIBAGENDI","DOUGLAS BOSIRE MOMANYI","DUKE NYAPORO OMBAGI","DUNCAN OENGA MONG'ARE","EMILY NYANCHAMA ONGWENYI","ENOCK NYANARO OKONG'O","ESTHER BUNDI","FAITH KEMUNTO ONYINGE","FAITH MORAA NYAKAMBA","FELISTAH MTIANG'A","GLADYS KERUBO MOSE","GRACE KWAMBOKA","HEILEN MONYANGI MORARA","ISHMAEL ORANG'O MOGAKA","IVONE NYAKUNDI","IVONE NYANCHAMA ONGWAE","JAMES MOENGA MOGENI","JAMES TOME OGETO","JOSEPH GEKONE OSORO","JOSEPH NYANGERI AGWATA","JOSEPH OTWABE ORUTWA","JOSHUA NYABITA ONDIEKI","JUSTINE MAKORI NYAKAMBA","KEVIN ACHIRA NYAKUNDI","KEVIN ONDIEKI NYAKUNDI","LAMECK ONTUMBI OROBO","LILIAN KEMUNTO","MESHACK MAGETO ACHIRA","MITCHELLE KERUBO","NANCY NYANG'ANYI","PATRICK NYAKUNDI ONYANDO","PRINCESS ELISEBA NYARONDIA","PURITY NYABOKE ORINA","RACHAEL NYABOKE ONCHIRI","SALOME ARASA","SAMWEL OSINDI OMITI","SHARON KERUBO ORUTWA","SHARON NYABOKE MOMANYI","ZABLON OMBETA MOSETI","HAVEY ORUCHO"],
+  "Grade 9": ["ARNOLD ACHIRA BOSIRE","BIVON ACHIRA ONYANCHA","BRIAN MOSE","BRIAN NYABUTI ONDIEKI","BRIAN NYAKUNDI MORARA","DAMACLINE MOKEIRA OGETO","DAMARIS KWAMBOKA OSIRI","DEBORAH NYORIANA MOMANYI","DORIS NYABIAGE MOGAKA","DORIS NYANCHAMA OMARE","DORIS NYONSEBA MORARA","ENOCK BWOMA KEMOSI","EUNICE KEMUNTO","FAITH KWAMBOKA ORUTWA","HELLEN MORAA ANURI","HELLEN MORAA ONKEO","INDIRAH MORAA ONGWENYI","IYVONNE KEMUNTO","JUDY NYATICHI NYAMOI","LAMECK ACHIRA ONDIEKI","MATHEW NYANDEGE","NEVIAN NYAKERARIO GEKARA","OBED ARASA OSUMA","OBED OMAYO ONDIEKI","PURITY MORAA ARASA","RUTH KERUBO OBURU","SAMUEL MARAGIA MONG'ARE","SAMUEL ONDARI ONYANCHA","SHARON KEMUNTO MORARA","SHEILAH MORAA NYACHIENG'A","SYLVIAH KEMUNTO NYAMBANE","TIBERIUS KIAGE ABUGA","VIVIAN KERUBO KIAGE","WILLIAM KEMOSI","ZACHARIA AGWATA MOKAYA"]
+};
+function buildRosterStudents(grade){
+  const names = ROSTERS[grade] || [];
+  return names.map(name => ({id: "roster_stu_"+name.replace(/[^A-Z0-9]/gi,"_"), name, photo: null}));
+}
+function uid(prefix){ return (prefix||"id")+"_"+Date.now()+"_"+Math.random().toString(36).slice(2,9); }
+function buildSeedData(){
+  const students = SEED_STUDENTS.map(row => ({id: "seed_stu_"+row[0].replace(/[^A-Z0-9]/gi,"_"), name: row[0], photo: null}));
+  const scores = {};
+  students.forEach((stu,i) => {
+    scores[stu.id] = {};
+    SUBJECTS.forEach((subj,j) => { scores[stu.id][subj] = SEED_STUDENTS[i][j+1]; });
+  });
+  const assessment = {id: "seed_asm_term2_2026", name:"Term 2, 2026", term:"Term 2", year:2026, grade:"Grade 6", createdAt: 1, scores};
+  return {students, assessments:[assessment]};
+}
+
+/* =========================================================
+   MULTI-GRADE STORE â€” the app's business logic works against
+   the top-level state.students/assessments/etc "working view".
+   These helpers move that view in and out of state.grades[X]
+   whenever the active grade changes.
+========================================================= */
+function blankGradeData(name){
+  return {students: [], assessments: [], subjectTeachers: {}, className: name, classTeacher: ""};
+}
+function defaultGradeData(name){
+  if(name === "Grade 6"){
+    const seed = buildSeedData();
+    return {students: seed.students, assessments: seed.assessments, subjectTeachers: {}, className: "Grade 6", classTeacher: "Caroline Ogweno"};
+  }
+  if(ROSTERS[name]){
+    return {students: buildRosterStudents(name), assessments: [], subjectTeachers: {}, className: name, classTeacher: ""};
+  }
+  return blankGradeData(name);
+}
+function saveActiveGradeToStore(){
+  state.grades[state.currentGrade] = {
+    students: state.students,
+    assessments: state.assessments,
+    subjectTeachers: state.subjectTeachers,
+    className: state.className,
+    classTeacher: state.classTeacher
+  };
+}
+function syncActiveGradeFromStore(){
+  const g = state.grades[state.currentGrade] || blankGradeData(state.currentGrade);
+  state.students = g.students;
+  state.assessments = g.assessments;
+  state.subjectTeachers = g.subjectTeachers;
+  state.className = g.className;
+  state.classTeacher = g.classTeacher || "";
+}
+function switchGrade(newGrade){
+  saveActiveGradeToStore();
+  state.currentGrade = newGrade;
+  SUBJECTS = subjectsForGrade(newGrade);
+  if(!state.grades[newGrade]) state.grades[newGrade] = defaultGradeData(newGrade);
+  syncActiveGradeFromStore();
+  runDedupeSafetyNets();
+  ui.selectedAssessmentId = state.assessments.length ? state.assessments[state.assessments.length-1].id : null;
+  ui.expandedStudent = null;
+  ui.selectedTerm = "Term 1";
+  ui.compareA = null;
+  ui.compareB = null;
+  ui.activeTab = "roster";
+  try{ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }catch(e){}
+  render();
+}
+/* =========================================================
+   CALCULATIONS
+========================================================= */
+function pointsForPct(pct){
+  if(pct===null||pct===undefined||pct==="") return null;
+  const p = Number(pct);
+  if(Number.isNaN(p)) return null;
+  const hit = GRADE_BANDS.find(b => p>=b.min && p<=b.max);
+  return hit ? hit.points : (p>100?8:0);
+}
+function overallGrade(avgPoints){
+  if(avgPoints===null||avgPoints===undefined||Number.isNaN(avgPoints)) return "-";
+  if(avgPoints>=7) return "EE";
+  if(avgPoints>=5) return "ME";
+  if(avgPoints>=3) return "AE";
+  if(avgPoints>0) return "BE";
+  return "-";
+}
+function pointsToBand(pts){
+  if(pts===null||pts===undefined) return "-";
+  if(pts>=7) return "EE"; if(pts>=5) return "ME"; if(pts>=3) return "AE"; if(pts>=1) return "BE";
+  return "-";
+}
+function firstName(full){
+  const w = (full||"").split(" ")[0]||"";
+  return w.charAt(0)+w.slice(1).toLowerCase();
+}
+function computeRows(students, assessment){
+  if(!assessment) return [];
+  const rows = students.map(stu => {
+    const subjScores = assessment.scores[stu.id] || {};
+    let totalPct=0, totalPoints=0, subjCount=0;
+    const perSubject = SUBJECTS.map(subj => {
+      const pct = subjScores[subj];
+      const pts = pointsForPct(pct);
+      if(pct!==undefined && pct!==null && pct!==""){ totalPct += Number(pct); totalPoints += pts||0; subjCount++; }
+      return {subject:subj, pct: pct===undefined?null:pct, points: pts};
+    });
+    const avgPoints = subjCount>0 ? totalPoints/subjCount : null;
+    return {studentId:stu.id, name:stu.name, photo:stu.photo, perSubject, totalMarks:totalPct, totalPoints, avgPoints, grade:overallGrade(avgPoints)};
+  });
+  const ranked = [...rows].sort((a,b) => (b.totalMarks||0)-(a.totalMarks||0));
+  ranked.forEach((r,i) => r.position = i+1);
+  const byId = {}; ranked.forEach(r => byId[r.studentId]=r);
+  return students.map(s => byId[s.id]);
+}
+function classAverages(rows){
+  const out = {};
+  SUBJECTS.forEach(subj => {
+    const vals = rows.map(r => (r.perSubject.find(p=>p.subject===subj)||{}).pct).filter(v=>v!==null&&v!==undefined&&v!=="");
+    out[subj] = vals.length ? vals.reduce((a,b)=>a+Number(b),0)/vals.length : 0;
+  });
+  return out;
+}
+// Builds a synthetic "assessment" whose per-subject score for each student
+// is the average of the same subject across two real assessments, then
+// ranks it exactly like any other assessment (same totals/points/grade
+// logic as computeRows) â€” so "average performance" gets its own position
+// 1..last, not just an average of two separate totals.
+function computeAveragedRows(students, asmA, asmB){
+  const avgScores = {};
+  students.forEach(stu => {
+    avgScores[stu.id] = {};
+    SUBJECTS.forEach(subj => {
+      const a = asmA ? asmA.scores[stu.id]?.[subj] : undefined;
+      const b = asmB ? asmB.scores[stu.id]?.[subj] : undefined;
+      const aNum = (a!==undefined && a!==null && a!=="") ? Number(a) : null;
+      const bNum = (b!==undefined && b!==null && b!=="") ? Number(b) : null;
+      if(aNum!==null && bNum!==null) avgScores[stu.id][subj] = Math.round(((aNum+bNum)/2)*10)/10;
+      else if(aNum!==null) avgScores[stu.id][subj] = aNum;
+      else if(bNum!==null) avgScores[stu.id][subj] = bNum;
+    });
+  });
+  const syntheticAsm = {
+    id: "avg_synthetic", name: `Average of ${asmA?asmA.name:"?"} & ${asmB?asmB.name:"?"}`,
+    term: (asmB&&asmB.term)||(asmA&&asmA.term), year: (asmB&&asmB.year)||(asmA&&asmA.year),
+    grade: state.className, createdAt: Date.now(), scores: avgScores
+  };
+  return computeRows(students, syntheticAsm);
+}
+
+/* =========================================================
+   STORAGE
+========================================================= */
+function loadState(){
+  try{
+    const raw = localStorage.getItem(STORE_KEY);
+    if(raw) return JSON.parse(raw);
+  }catch(e){}
+  return null;
+}
+let saveTimer = null;
+function scheduleSave(){
+  setSaveStatus("saving");
+  if(saveTimer) clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => {
+    try{
+      saveActiveGradeToStore();
+      localStorage.setItem(STORE_KEY, JSON.stringify(state));
+      setSaveStatus("saved");
+    }catch(e){
+      setSaveStatus("error");
+    }
+  }, 500);
+}
+function setSaveStatus(s){
+  const el = document.getElementById("saveStatus");
+  if(s==="saving") el.innerHTML = icon("save",12)+" Savingâ€¦";
+  else if(s==="saved") el.innerHTML = '<span style="color:#1B7A4A;display:flex;align-items:center;gap:4px;">'+icon("check",12)+' Saved</span>';
+  else if(s==="error") el.innerHTML = '<span style="color:#A3402F;display:flex;align-items:center;gap:4px;">'+icon("alert",12)+' Save failed</span>';
+  else el.innerHTML = "";
+}
+
+/* =========================================================
+   LIVE SYNC â€” real cross-device sync via your own Firebase
+   project (Bosiango Exam Analyzer), not Claude's system. This
+   is the independent test copy â€” same sync logic as the main
+   app, just pointed at real, separately-owned infrastructure.
+========================================================= */
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyASOcls2eiq__m95gWS3wbWwpawwsQQOs8",
+  authDomain: "bosiango-exam-analyzer.firebaseapp.com",
+  projectId: "bosiango-exam-analyzer",
+  storageBucket: "bosiango-exam-analyzer.firebasestorage.app",
+  messagingSenderId: "455202849093",
+  appId: "1:455202849093:web:fa976c85fb76f672863e2c"
+};
+function setSyncStatus(s){
+  const el = document.getElementById("syncStatus");
+  if(!el) return;
+  if(s==="connecting") el.innerHTML = '<span style="color:var(--navy-soft);">Connecting to syncâ€¦</span>';
+  else if(s==="connected") el.innerHTML = '<span style="color:#1B7A4A;">â— Live sync on</span>';
+  else if(s==="pending") el.innerHTML = '<span style="color:#B8860B;">â— Saved on this device â€” will sync once online</span>';
+  else if(s==="error") el.innerHTML = '<span style="color:#A3402F;">â— Sync error â€” saved on this device only</span>';
+  else if(s==="offline") el.innerHTML = '<span style="color:var(--navy-soft);">â— Sync unavailable â€” saved on this device only</span>';
+  else el.innerHTML = "";
+}
+function firebaseReady(){ return SYNC_ENABLED && !!dbNS; }
+async function ensureDb(){
+  if(dbNS) return dbNS;
+  if(typeof firebase === "undefined") return null;
+  try{
+    // Never let a dead/absent connection block the app from opening â€”
+    // if we can't reach the sync backend within a few seconds, give up
+    // for now and let the app run fully offline; the retry loop further
+    // down will keep trying in the background.
+    dbNS = await Promise.race([
+      (async () => {
+        if(!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
+        return firebase.firestore();
+      })(),
+      new Promise((_, reject) => setTimeout(()=>reject(new Error("db-connect-timeout")), 4000))
+    ]);
+  }catch(e){ dbNS = null; }
+  return dbNS;
+}
+function canPushCloud(){ return SYNC_ENABLED && !!dbNS && !syncApplyingRemote; }
+let downloadsNS = null;
+async function ensureDownloads(){
+  if(downloadsNS) return downloadsNS;
+  if(typeof claude === "undefined" || !claude.use) return null;
+  try{ downloadsNS = await claude.use("downloads"); }catch(e){ downloadsNS = null; }
+  return downloadsNS;
+}
+// Saves a file to the viewer's device. Plain <a download> / blob links
+// don't work inside a published Claude page, so every save in this app
+// (PDF reports, JSON exports/backups) goes through this instead.
+async function saveFile(filename, data){
+  // On Claude's hosting, files must go through the downloads capability.
+  // On independent hosting (GitHub Pages etc.), a normal browser download
+  // link works fine and is used instead.
+  if(typeof claude !== "undefined" && claude.use){
+    const downloads = await ensureDownloads();
+    if(downloads){
+      try{
+        await downloads.save({filename, data});
+        return true;
+      }catch(e){
+        if(e && e.code === "declined") return false;
+        showAlert("Couldn't save that file. Please try again.");
+        return false;
+      }
+    }
+  }
+  try{
+    const blob = data instanceof Blob ? data : new Blob([data], {type: filename.endsWith(".json") ? "application/json" : "application/octet-stream"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    return true;
+  }catch(e){
+    showAlert("Couldn't save that file. Please try again.");
+    return false;
+  }
+}
+// Renders a report element to a multi-page A4 PDF and saves it via the
+// downloads capability (window.print()/Save-as-PDF isn't reliable inside
+// a published, embedded page).
+// Exports the report as a Word-compatible document (landscape, A4) so
+// orientation is baked into the file itself â€” Word/printers respect it
+// directly, sidestepping any print-dialog default that forces portrait.
+// Exports the report as a genuine .docx (real OOXML/ZIP, built with
+// JSZip) â€” the platform only allows saving .docx, not the classic
+// HTML-as-.doc trick, so this walks the rendered report DOM into real
+// Word XML and sets the section to landscape A4 directly in the file.
+function escXml(s){
+  return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&apos;");
+}
+function docxCellIsBold(cell){
+  const style = cell.getAttribute("style")||"";
+  return /font-weight:\s*(700|bold)/i.test(style) || !!cell.closest("thead") || cell.tagName==="TH";
+}
+function docxTableXml(table){
+  const rows = Array.from(table.querySelectorAll("tr"));
+  const pending = {};
+  let totalCols = 0;
+  rows.forEach(tr => {
+    let sum = 0;
+    Array.from(tr.children).forEach(cell => { sum += parseInt(cell.getAttribute("colspan")||"1", 10); });
+    totalCols = Math.max(totalCols, sum);
+  });
+
+  // Without an explicit column grid, Word/LibreOffice auto-fits each
+  // row's widths independently â€” which, combined with merged header
+  // cells, makes rows drift out of alignment with each other. A fixed
+  // <w:tblGrid> (mark-list tables get a wider NO/NAME pair, everything
+  // else equal) keeps every row honestly lined up.
+  const usableWidthTwips = 14000;
+  const firstCellText = (rows[0] && rows[0].children[0] ? rows[0].children[0].textContent.trim().toUpperCase() : "");
+  const isRosterStyle = firstCellText === "NO." && totalCols > 2;
+  let colWidths;
+  if(isRosterStyle){
+    const noW = 500, nameW = 1800;
+    const rest = totalCols - 2;
+    const restW = Math.max(300, Math.floor((usableWidthTwips - noW - nameW) / rest));
+    colWidths = [noW, nameW, ...Array(rest).fill(restW)];
+  } else {
+    const eachW = Math.floor(usableWidthTwips / totalCols);
+    colWidths = Array(totalCols).fill(eachW);
+  }
+
+  let xml = `<w:tbl><w:tblPr><w:tblW w:w="${usableWidthTwips}" w:type="dxa"/><w:tblLayout w:type="fixed"/><w:tblBorders>`+
+    ["top","left","bottom","right","insideH","insideV"].map(edge=>`<w:${edge} w:val="single" w:sz="4" w:space="0" w:color="C7CEDD"/>`).join("")+
+    `</w:tblBorders></w:tblPr><w:tblGrid>${colWidths.map(w=>`<w:gridCol w:w="${w}"/>`).join("")}</w:tblGrid>`;
+
+  rows.forEach(tr => {
+    let col = 0;
+    let rowXml = "<w:tr>";
+    const cells = Array.from(tr.children);
+    let cellIdx = 0;
+    while(cellIdx < cells.length || (pending[col] && pending[col].remaining>0)){
+      if(pending[col] && pending[col].remaining>0){
+        const span = pending[col].span;
+        const w = colWidths.slice(col, col+span).reduce((a,b)=>a+b, 0);
+        rowXml += `<w:tc><w:tcPr><w:tcW w:w="${w}" w:type="dxa"/>`+(span>1?`<w:gridSpan w:val="${span}"/>`:"")+'<w:vMerge/><w:shd w:val="clear" w:fill="FFFFFF"/></w:tcPr><w:p/></w:tc>';
+        pending[col].remaining -= 1;
+        col += span;
+        continue;
+      }
+      const cell = cells[cellIdx];
+      if(!cell) break;
+      cellIdx++;
+      const span = parseInt(cell.getAttribute("colspan")||"1", 10);
+      const rowspan = parseInt(cell.getAttribute("rowspan")||"1", 10);
+      const bold = docxCellIsBold(cell);
+      const text = escXml(cell.textContent.trim());
+      const w = colWidths.slice(col, col+span).reduce((a,b)=>a+b, 0);
+      const vMergeTag = rowspan>1 ? "<w:vMerge w:val=\"restart\"/>" : "";
+      rowXml += `<w:tc><w:tcPr><w:tcW w:w="${w}" w:type="dxa"/>`+(span>1?`<w:gridSpan w:val="${span}"/>`:"")+vMergeTag+'<w:shd w:val="clear" w:fill="FFFFFF"/></w:tcPr>'+
+        `<w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r>${bold?"<w:rPr><w:b/></w:rPr>":""}<w:t xml:space="preserve">${text}</w:t></w:r></w:p></w:tc>`;
+      if(rowspan>1) pending[col] = {remaining: rowspan-1, span};
+      col += span;
+    }
+    xml += rowXml + "</w:tr>";
+  });
+  xml += "</w:tbl>";
+  return xml;
+}
+function docxParagraphXml(el){
+  const text = el.textContent.trim();
+  if(!text) return "";
+  const tag = el.tagName;
+  const isHeading = tag==="H1"||tag==="H2"||tag==="H3";
+  const size = tag==="H1" ? 32 : tag==="H2" ? 24 : tag==="H3" ? 20 : 18;
+  return `<w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:rPr>${isHeading?"<w:b/>":""}<w:sz w:val="${size}"/></w:rPr><w:t xml:space="preserve">${escXml(text)}</w:t></w:r></w:p>`;
+}
+function docxWalkBlock(el, xmlParts){
+  if(el.tagName === "TABLE"){
+    xmlParts.push(docxTableXml(el));
+    xmlParts.push("<w:p/>");
+  } else if(el.tagName === "IMG"){
+    // logo images are skipped for simplicity
+  } else if(el.children && el.children.length && el.querySelector && el.querySelector("table")){
+    Array.from(el.children).forEach(child => docxWalkBlock(child, xmlParts));
+  } else {
+    const p = docxParagraphXml(el);
+    if(p) xmlParts.push(p);
+  }
+}
+async function ensureJSZip(){
+  if(window.JSZip) return window.JSZip;
+  await new Promise(r => setTimeout(r, 300));
+  return window.JSZip || null;
+}
+async function downloadReportWord(filenameBase, btnEl){
+  const node = document.getElementById("printable");
+  if(!node){ showAlert("Nothing to export."); return; }
+  const originalHTML = btnEl ? btnEl.innerHTML : null;
+  if(btnEl){ btnEl.disabled = true; btnEl.innerHTML = "Preparingâ€¦"; }
+  try{
+    const JSZipLib = await ensureJSZip();
+    if(!JSZipLib){ showAlert("Word export tools are still loading â€” please wait a few seconds and try again."); return; }
+    const clone = node.cloneNode(true);
+    clone.querySelectorAll(".no-print").forEach(el => el.remove());
+    const xmlParts = [];
+    Array.from(clone.children).forEach(child => docxWalkBlock(child, xmlParts));
+    const bodyXml = xmlParts.join("");
+
+    const zip = new JSZipLib();
+    zip.file("[Content_Types].xml", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+<Default Extension="xml" ContentType="application/xml"/>
+<Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>
+</Types>`);
+    zip.folder("_rels").file(".rels", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/>
+</Relationships>`);
+    const word = zip.folder("word");
+    word.folder("_rels").file("document.xml.rels", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+</Relationships>`);
+    word.file("document.xml", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+<w:body>
+${bodyXml}
+<w:sectPr>
+<w:pgSz w:w="16838" w:h="11906" w:orient="landscape"/>
+<w:pgMar w:top="720" w:right="720" w:bottom="720" w:left="720" w:header="0" w:footer="0" w:gutter="0"/>
+</w:sectPr>
+</w:body>
+</w:document>`);
+    const blob = await zip.generateAsync({type:"blob", mimeType:"application/vnd.openxmlformats-officedocument.wordprocessingml.document"});
+    await saveFile(`${filenameBase}.docx`, blob);
+  }catch(e){
+    showAlert("Couldn't create the Word file. Please try again.");
+  } finally {
+    if(btnEl){ btnEl.disabled = false; btnEl.innerHTML = originalHTML; }
+  }
+}
+async function downloadReportPDF(filenameBase, btnEl){
+  const node = document.getElementById("printable");
+  if(!node){ showAlert("Nothing to export."); return; }
+  const originalHTML = btnEl ? btnEl.innerHTML : null;
+  if(btnEl){ btnEl.disabled = true; btnEl.innerHTML = "Preparing PDFâ€¦"; }
+
+  // Temporarily unclip anything horizontally scrollable (wide mark-list
+  // tables) so html2canvas captures the FULL content width instead of
+  // just what's visible on a narrow phone screen.
+  const restoreFns = [];
+  function unclip(el){
+    if(!el || !el.style) return;
+    const cs = getComputedStyle(el);
+    if(cs.overflowX === "auto" || cs.overflowX === "scroll"){
+      const prevOverflow = el.style.overflow, prevOverflowX = el.style.overflowX;
+      el.style.overflow = "visible";
+      el.style.overflowX = "visible";
+      restoreFns.push(()=>{ el.style.overflow = prevOverflow; el.style.overflowX = prevOverflowX; });
+    }
+    Array.from(el.children).forEach(unclip);
+  }
+  const prevWidth = node.style.width, prevMaxWidth = node.style.maxWidth;
+  unclip(node);
+  const fullWidth = Math.max(node.scrollWidth, node.getBoundingClientRect().width);
+  node.style.width = fullWidth + "px";
+  node.style.maxWidth = "none";
+  restoreFns.push(()=>{ node.style.width = prevWidth; node.style.maxWidth = prevMaxWidth; });
+
+  let tempWrapper = null;
+  try{
+    if(typeof html2canvas === "undefined" || !window.jspdf){
+      showAlert("PDF tools are still loading â€” please wait a few seconds and try again.");
+      return;
+    }
+    const { jsPDF } = window.jspdf;
+    let pdf = null;
+
+    const captureEl = async (el) => html2canvas(el, {
+      scale:2,
+      backgroundColor:"#ffffff",
+      useCORS:true,
+      windowWidth: fullWidth,
+      // Skip the Download/Close button row itself â€” it shouldn't appear
+      // inside the PDF it produces.
+      ignoreElements: e => e.classList && e.classList.contains("no-print")
+    });
+
+    const addCanvasAsPage = (canvas) => {
+      const landscape = canvas.width > canvas.height;
+      const pageW = landscape ? 841.89 : 595.28;
+      const pageH = landscape ? 595.28 : 841.89;
+      const imgW = pageW;
+      const imgH = (canvas.height * imgW) / canvas.width;
+      const imgData = canvas.toDataURL("image/jpeg", 0.92);
+      if(!pdf) pdf = new jsPDF({orientation: landscape?"landscape":"portrait", unit:"pt", format:"a4"});
+      else pdf.addPage("a4", landscape?"landscape":"portrait");
+      let heightLeft = imgH, position = 0;
+      pdf.addImage(imgData, "JPEG", 0, position, imgW, imgH);
+      heightLeft -= pageH;
+      while(heightLeft > 0){
+        position = heightLeft - imgH;
+        pdf.addPage("a4", landscape?"landscape":"portrait");
+        pdf.addImage(imgData, "JPEG", 0, position, imgW, imgH);
+        heightLeft -= pageH;
+      }
+    };
+
+    // A report can mark a section boundary with class "print-page-break"
+    // (e.g. the Subject Analysis block) â€” when present, everything up to
+    // and including it becomes its own PDF page, and everything after it
+    // becomes a second page, instead of one continuous image sliced at
+    // an arbitrary height.
+    const breakEl = node.querySelector(".print-page-break");
+    if(breakEl){
+      addCanvasAsPage(await captureEl(breakEl));
+
+      tempWrapper = document.createElement("div");
+      tempWrapper.style.cssText = `position:fixed;left:-99999px;top:0;background:#fff;width:${fullWidth}px;`;
+      let sib = breakEl.nextElementSibling;
+      while(sib){
+        if(!(sib.classList && sib.classList.contains("no-print"))){
+          tempWrapper.appendChild(sib.cloneNode(true));
+        }
+        sib = sib.nextElementSibling;
+      }
+      document.body.appendChild(tempWrapper);
+      addCanvasAsPage(await captureEl(tempWrapper));
+    } else {
+      addCanvasAsPage(await captureEl(node));
+    }
+
+    const blob = pdf.output("blob");
+    await saveFile(`${filenameBase}.pdf`, blob);
+  }catch(e){
+    showAlert("Couldn't create the PDF. Please try again.");
+  } finally {
+    if(tempWrapper && tempWrapper.parentNode) tempWrapper.parentNode.removeChild(tempWrapper);
+    restoreFns.reverse().forEach(fn=>fn());
+    if(btnEl){ btnEl.disabled = false; btnEl.innerHTML = originalHTML; }
+  }
+}
+function queueCloudPush(){
+  if(syncApplyingRemote) return;
+  markCloudDirty();
+  if(!canPushCloud()){
+    // Offline or not yet connected: the edit is already safe in
+    // localStorage (scheduleSave handles that separately). Flag it as
+    // pending so a reconnect (online event / retry loop) pushes it up.
+    setSyncStatus(navigator.onLine === false ? "pending" : (SYNC_ENABLED ? "error" : "offline"));
+    return;
+  }
+  cloudWriteQueued = true;
+  cloudWriteChain = cloudWriteChain.then(async () => {
+    if(!cloudWriteQueued) return;
+    cloudWriteQueued = false;
+    try{
+      await dbNS.doc(SYNC_DOC_PATH).set(buildCloudPayload());
+      clearCloudDirty();
+      setSyncStatus("connected");
+    }catch(e){
+      // Write failed (likely a dropped connection mid-write). Keep the
+      // dirty flag set so the retry loop below tries again shortly.
+      setSyncStatus(navigator.onLine === false ? "pending" : "error");
+    }
+  });
+}
+// Retries connecting and/or flushing any offline edits once we're back
+// online â€” fired on the browser's 'online' event, on tab focus, and on
+// a slow background timer as a fallback for flaky mobile connections.
+let reconnecting = false;
+async function attemptReconnectAndFlush(){
+  if(reconnecting || syncApplyingRemote) return;
+  reconnecting = true;
+  try{
+    if(!dbNS){
+      const db = await ensureDb();
+      if(db){
+        SYNC_ENABLED = true;
+        try{
+          const ref = db.doc(SYNC_DOC_PATH);
+          const snap = await ref.get();
+          // Pull + merge first so we don't clobber marks another
+          // device/teacher saved while this one was offline.
+          if(snap.exists) applyCloudSnapshot(snap.data());
+          attachSyncListener();
+          setSyncStatus(cloudDirty ? "connected" : "connected");
+        }catch(e){
+          setSyncStatus("error");
+        }
+      }
+    }
+    if(dbNS && cloudDirty){
+      queueCloudPush();
+    }
+  } finally {
+    reconnecting = false;
+  }
+}
+if(typeof window !== "undefined"){
+  window.addEventListener("online", attemptReconnectAndFlush);
+  document.addEventListener("visibilitychange", () => {
+    if(document.visibilityState === "visible") attemptReconnectAndFlush();
+  });
+  setInterval(attemptReconnectAndFlush, 25000);
+}
+
+function cloudStudentsMap(students){
+  const map = {};
+  students.forEach(s => { map[s.id] = {name: s.name}; });
+  return map;
+}
+function cloudAssessmentsMap(assessments){
+  const map = {};
+  assessments.forEach(a => { map[a.id] = {name:a.name, term:a.term, year:a.year, grade:a.grade, createdAt:a.createdAt, scores:a.scores}; });
+  return map;
+}
+function buildCloudPayload(){
+  saveActiveGradeToStore();
+  const gradesPayload = {};
+  Object.entries(state.grades).forEach(([gName, gData]) => {
+    gradesPayload[gName] = {
+      className: gData.className,
+      classTeacher: gData.classTeacher || "",
+      students: cloudStudentsMap(gData.students),
+      assessments: cloudAssessmentsMap(gData.assessments),
+      subjectTeachers: gData.subjectTeachers,
+      deletedStudentIds: [],
+      deletedAssessmentIds: []
+    };
+  });
+  return { grades: gradesPayload, updatedAt: Date.now() };
+}
+function mergeScores(localScores, cloudScores){
+  const out = Object.assign({}, localScores||{});
+  Object.entries(cloudScores||{}).forEach(([sid, subj]) => {
+    out[sid] = Object.assign({}, out[sid]||{}, subj);
+  });
+  return out;
+}
+// Merges one grade's cloud data into its local slice in state.grades.
+function applyCloudGradeSlice(gName, gData){
+  if(!state.grades[gName]) state.grades[gName] = blankGradeData(gName);
+  const target = state.grades[gName];
+  if(gData.className) target.className = gData.className;
+  if(gData.classTeacher!==undefined && gData.classTeacher!==null) target.classTeacher = gData.classTeacher;
+
+  const cloudStudents = gData.students || {};
+  const localById = {};
+  target.students.forEach(s => localById[s.id]=s);
+  Object.entries(cloudStudents).forEach(([id, cs]) => {
+    if(localById[id]) localById[id].name = cs.name;
+    else target.students.push({id, name:cs.name, photo:null});
+  });
+
+  const cloudAsm = gData.assessments || {};
+  const localAsmById = {};
+  target.assessments.forEach(a => localAsmById[a.id]=a);
+  Object.entries(cloudAsm).forEach(([id, ca]) => {
+    if(localAsmById[id]){
+      const t = localAsmById[id];
+      t.name=ca.name; t.term=ca.term; t.year=ca.year;
+      t.scores = mergeScores(t.scores, ca.scores);
+    } else {
+      target.assessments.push({id, name:ca.name, term:ca.term, year:ca.year, grade:ca.grade||target.className, createdAt:ca.createdAt||Date.now(), scores:ca.scores||{}});
+    }
+  });
+
+  if(gData.subjectTeachers) target.subjectTeachers = Object.assign({}, target.subjectTeachers, gData.subjectTeachers);
+
+  // Apply permanent deletions (tombstones) so a delete sticks everywhere
+  // and a student/assessment that was removed doesn't get resurrected
+  // by a stale cloud copy.
+  const delStudents = gData.deletedStudentIds || [];
+  if(delStudents.length){
+    target.students = target.students.filter(s => !delStudents.includes(s.id));
+    target.assessments.forEach(a => { delStudents.forEach(id => { delete a.scores[id]; }); });
+  }
+  const delAsm = gData.deletedAssessmentIds || [];
+  if(delAsm.length){
+    target.assessments = target.assessments.filter(a => !delAsm.includes(a.id));
+  }
+}
+function applyCloudSnapshot(data){
+  syncApplyingRemote = true;
+  try{
+    const cloudGrades = data.grades || {};
+    Object.entries(cloudGrades).forEach(([gName, gData]) => applyCloudGradeSlice(gName, gData));
+
+    // Refresh the active working view from the just-updated store, then
+    // run the safety nets against it, then persist back.
+    syncActiveGradeFromStore();
+    if(ui.selectedAssessmentId && !state.assessments.find(a=>a.id===ui.selectedAssessmentId)){
+      ui.selectedAssessmentId = state.assessments.length ? state.assessments[state.assessments.length-1].id : null;
+    }
+
+    runDedupeSafetyNets();
+    try{ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }catch(e){}
+    render();
+  } finally {
+    syncApplyingRemote = false;
+  }
+}
+// Cleans up same-name duplicate students and same-name/term/year duplicate
+// assessments in the CURRENTLY ACTIVE grade, and â€” critically â€” tells the
+// cloud to remove them too, so the cleanup sticks everywhere instead of
+// just healing locally each time a snapshot arrives.
+function runDedupeSafetyNets(){
+  const studentDedupe = dedupeStudentsByName();
+  const mergeResult = mergeDuplicateAssessments();
+  saveActiveGradeToStore();
+  if(studentDedupe.changed || mergeResult.changed){
+    try{ queueCloudPush(); }catch(e){}
+  }
+  return studentDedupe.changed || mergeResult.changed;
+}
+function syncPushField(_fieldPathArray, _value){
+  // Kept for call-site compatibility â€” every local mutation now pushes
+  // a full, current snapshot rather than a per-field patch.
+  if(syncApplyingRemote) return;
+  queueCloudPush();
+}
+function attachSyncListener(){
+  if(!dbNS) return;
+  try{
+    dbUnsub = dbNS.doc(SYNC_DOC_PATH).onSnapshot(
+      snap => { if(snap.exists && !snap.metadata.hasPendingWrites) applyCloudSnapshot(snap.data()); },
+      () => setSyncStatus("error")
+    );
+  }catch(e){}
+}
+// Safety net: if two students ever end up with the same name (e.g. from
+// an old duplicate-seed bug), merge them into one instead of showing both.
+function dedupeStudentsByName(){
+  const groups = {};
+  state.students.forEach(s => {
+    const key = (s.name||"").trim().toUpperCase();
+    if(!groups[key]) groups[key] = [];
+    groups[key].push(s);
+  });
+  let changed = false;
+  const removedIds = [];
+  const keptIds = [];
+  Object.values(groups).forEach(group => {
+    if(group.length < 2) return;
+    changed = true;
+    const keep = group[0];
+    keptIds.push(keep.id);
+    group.slice(1).forEach(dupe => {
+      state.assessments.forEach(a => {
+        if(a.scores[dupe.id]){
+          a.scores[keep.id] = Object.assign({}, a.scores[dupe.id], a.scores[keep.id]);
+          delete a.scores[dupe.id];
+        }
+      });
+      if(!keep.photo && dupe.photo) keep.photo = dupe.photo;
+    });
+    const dupeIds = group.slice(1).map(d=>d.id);
+    removedIds.push(...dupeIds);
+    state.students = state.students.filter(s => !dupeIds.includes(s.id));
+  });
+  return { changed, removedIds, keptIds };
+}
+// Safety net: if two assessments end up with the same term + year + name
+// (e.g. two teachers each created "Mid Term 3" separately instead of using
+// the one that already existed), merge their scores into one instead of
+// splitting the class's marks across several hidden copies.
+function mergeDuplicateAssessments(){
+  const groups = {};
+  state.assessments.forEach(a => {
+    const key = (a.term||"") + "||" + (a.year||"") + "||" + (a.name||"").trim().toUpperCase();
+    if(!groups[key]) groups[key] = [];
+    groups[key].push(a);
+  });
+  let changed = false;
+  const removedIds = [];
+  const keptIds = [];
+  Object.values(groups).forEach(group => {
+    if(group.length < 2) return;
+    changed = true;
+    group.sort((a,b) => (a.createdAt||0) - (b.createdAt||0));
+    const keep = group[0];
+    keptIds.push(keep.id);
+    group.slice(1).forEach(dupe => {
+      Object.entries(dupe.scores||{}).forEach(([sid, subjScores]) => {
+        keep.scores[sid] = Object.assign({}, subjScores, keep.scores[sid]||{});
+      });
+    });
+    const dupeIds = group.slice(1).map(d=>d.id);
+    removedIds.push(...dupeIds);
+    state.assessments = state.assessments.filter(a => !dupeIds.includes(a.id));
+    if(dupeIds.includes(ui.selectedAssessmentId)) ui.selectedAssessmentId = keep.id;
+  });
+  return { changed, removedIds, keptIds };
+}
+// Used only when this device has NO saved data yet â€” checks the cloud
+// FIRST, before ever generating a fresh starter roster, so a brand-new
+// device can never create duplicate students alongside the real ones.
+// Only bootstraps the currently-active grade; other grades load lazily
+// the first time someone switches to them (via the live listener, which
+// already carries every grade's data once connected).
+// Races any promise against a timeout so a stalled connection can never
+// block the app from opening â€” used around every network call in the
+// sync layer below.
+function withTimeout(promise, ms, label){
+  return Promise.race([
+    promise,
+    new Promise((_, reject) => setTimeout(()=>reject(new Error((label||"operation")+"-timeout")), ms))
+  ]);
+}
+async function bootstrapFromCloudOrSeed(){
+  setSyncStatus("connecting");
+  const db = await ensureDb();
+  if(db){
+    SYNC_ENABLED = true;
+    try{
+      const ref = db.doc(SYNC_DOC_PATH);
+      const snap = await withTimeout(ref.get(), 6000, "sync-get");
+      const cloudGradeData = (snap.exists && snap.data() && snap.data().grades) ? snap.data().grades[state.currentGrade] : null;
+      if(cloudGradeData && Object.keys(cloudGradeData.students||{}).length){
+        state.grades[state.currentGrade] = blankGradeData(state.currentGrade);
+        applyCloudSnapshot(snap.data());
+      } else {
+        const def = defaultGradeData(state.currentGrade);
+        state.grades[state.currentGrade] = def;
+        syncActiveGradeFromStore();
+        await withTimeout(ref.set(buildCloudPayload()), 6000, "sync-set");
+        clearCloudDirty();
+      }
+      attachSyncListener();
+      setSyncStatus("connected");
+    }catch(e){
+      setSyncStatus("error");
+      state.grades[state.currentGrade] = defaultGradeData(state.currentGrade);
+      syncActiveGradeFromStore();
+    }
+  } else {
+    SYNC_ENABLED = false;
+    setSyncStatus("offline");
+    state.grades[state.currentGrade] = defaultGradeData(state.currentGrade);
+    syncActiveGradeFromStore();
+  }
+}
+// Used when this device already has saved data â€” connects to the cloud
+// and reconciles, without ever discarding what's already here.
+async function initSync(){
+  setSyncStatus("connecting");
+  const db = await ensureDb();
+  if(!db){ SYNC_ENABLED = false; setSyncStatus("offline"); return; }
+  SYNC_ENABLED = true;
+  try{
+    const ref = db.doc(SYNC_DOC_PATH);
+    const snap = await withTimeout(ref.get(), 6000, "sync-get");
+    if(!snap.exists){ await withTimeout(ref.set(buildCloudPayload()), 6000, "sync-set"); clearCloudDirty(); }
+    else applyCloudSnapshot(snap.data());
+    attachSyncListener();
+    setSyncStatus("connected");
+    if(cloudDirty) queueCloudPush();
+  }catch(e){
+    setSyncStatus("error");
+  }
+}
+
+// One-time migration: backfills learner names for any grade that has
+// ROSTER data on file but currently has an empty roster in the app
+// (e.g. a grade that was visited before names were supplied). Never
+// touches a grade that already has students â€” existing entries always
+// win. Pushes the addition to the cloud too, so it reaches every device.
+function backfillMissingRosters(){
+  let changed = false;
+  Object.keys(ROSTERS).forEach(grade => {
+    if(!state.grades[grade]){
+      state.grades[grade] = defaultGradeData(grade);
+      changed = true;
+    } else if(!state.grades[grade].students || state.grades[grade].students.length === 0){
+      state.grades[grade].students = buildRosterStudents(grade);
+      changed = true;
+    }
+  });
+  if(changed){
+    syncActiveGradeFromStore();
+    saveActiveGradeToStore();
+    try{ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }catch(e){}
+    try{ queueCloudPush(); }catch(e){}
+  }
+  return changed;
+}
+
+/* =========================================================
+   MODALS
+========================================================= */
+function showAlert(message){
+  renderModal(`
+    <div class="modal-box">
+      <p style="font-size:13px;margin:0 0 16px;">${esc(message)}</p>
+      <div class="modal-actions"><button class="btn sm" onclick="closeModal()">OK</button></div>
+    </div>`);
+}
+function showConfirm(message, onConfirm){
+  window.__confirmCb = onConfirm;
+  renderModal(`
+    <div class="modal-box">
+      <p style="font-size:13px;margin:0 0 16px;">${esc(message)}</p>
+      <div class="modal-actions">
+        <button class="btn sm outline" onclick="closeModal()">Cancel</button>
+        <button class="btn sm" onclick="const cb=window.__confirmCb; closeModal(); cb();">Confirm</button>
+      </div>
+    </div>`);
+}
+function showInput(title, label, onSubmit){
+  window.__inputCb = onSubmit;
+  renderModal(`
+    <div class="modal-box">
+      <p class="small-note" style="text-transform:uppercase;letter-spacing:1px;">${esc(title)}</p>
+      <input type="text" id="modalInputField" placeholder="${esc(label)}" style="width:100%;margin-bottom:16px;" autofocus>
+      <div class="modal-actions">
+        <button class="btn sm outline" onclick="closeModal()">Cancel</button>
+        <button class="btn sm" onclick="const v=document.getElementById('modalInputField').value; const cb=window.__inputCb; closeModal(); cb(v);">Add</button>
+      </div>
+    </div>`);
+  setTimeout(() => {
+    const f = document.getElementById("modalInputField");
+    if(f){ f.focus(); f.addEventListener("keydown", e => { if(e.key==="Enter"){ const v=f.value; const cb=window.__inputCb; closeModal(); cb(v); } }); }
+  }, 0);
+}
+function showAssessmentDetails(initialTerm, initialName, onSubmit){
+  window.__asmCb = onSubmit;
+  const year = new Date().getFullYear();
+  const defaultName = initialName || (initialTerm+", "+year);
+  renderModal(`
+    <div class="modal-box">
+      <p class="small-note" style="text-transform:uppercase;letter-spacing:1px;">New assessment</p>
+      <label class="field-label">Term</label>
+      <select id="asmTerm" style="width:100%;margin-bottom:12px;" onchange="document.getElementById('asmName').value=this.value+', '+document.getElementById('asmYear').value">
+        ${TERMS.map(t => `<option value="${t}" ${t===initialTerm?"selected":""}>${t}</option>`).join("")}
+      </select>
+      <label class="field-label">Year</label>
+      <input type="number" id="asmYear" value="${year}" style="width:100%;margin-bottom:12px;" oninput="document.getElementById('asmName').value=document.getElementById('asmTerm').value+', '+this.value">
+      <label class="field-label">Assessment name</label>
+      <input type="text" id="asmName" value="${esc(defaultName)}" style="width:100%;margin-bottom:16px;">
+      <div class="modal-actions">
+        <button class="btn sm outline" onclick="closeModal()">Cancel</button>
+        <button class="btn sm" onclick="submitAssessmentModal()">Create</button>
+      </div>
+    </div>`);
+}
+function submitAssessmentModal(){
+  const term = document.getElementById("asmTerm").value;
+  const year = Number(document.getElementById("asmYear").value) || new Date().getFullYear();
+  const name = document.getElementById("asmName").value;
+  const cb = window.__asmCb;
+  closeModal();
+  cb({term, year, name});
+}
+function renderModal(html){ document.getElementById("modalRoot").innerHTML = `<div class="modal-overlay" onclick="if(event.target===this)closeModal()">${html}</div>`; }
+function closeModal(){ document.getElementById("modalRoot").innerHTML = ""; }
+function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+
+/* =========================================================
+   STUDENT / ASSESSMENT MUTATIONS
+========================================================= */
+function addStudent(){
+  showInput("Add student", "Student name", (name) => {
+    if(!name || !name.trim()) return;
+    const newStu = {id:uid("stu"), name:name.trim().toUpperCase(), photo:null};
+    state.students.push(newStu);
+    state.assessments.forEach(a => { a.scores[newStu.id] = {}; });
+    persistAndRender();
+    syncPushField(["students", newStu.id], {name: newStu.name});
+  });
+}
+function removeStudent(studentId){
+  const msg = SYNC_ENABLED
+    ? "Permanently remove this student from the roster and all assessments? This will remove them everywhere â€” including every other teacher's copy once they're back online."
+    : "Remove this student from the roster and all assessments?";
+  showConfirm(msg, () => {
+    state.students = state.students.filter(s => s.id!==studentId);
+    state.assessments.forEach(a => { delete a.scores[studentId]; });
+    persistAndRender();
+    try{ queueCloudPush(); }catch(e){}
+  });
+}
+function setSubjectTeacher(subject, name){
+  state.subjectTeachers[subject] = name;
+  scheduleSave();
+  syncPushField(["subjectTeachers", subject], name);
+}
+function setClassName(name){
+  state.className = name;
+  scheduleSave();
+  render();
+  syncPushField(["className"], name);
+}
+function setClassTeacher(name){
+  state.classTeacher = name;
+  scheduleSave();
+  render();
+  syncPushField(["classTeacher"], name);
+}
+function renameStudent(studentId, name){
+  const s = state.students.find(s=>s.id===studentId);
+  if(s){
+    s.name = name;
+    persistAndRender();
+    syncPushField(["students", studentId], {name});
+  }
+}
+function triggerPhotoUpload(studentId){
+  window.__photoTarget = studentId;
+  document.getElementById("photoInput").click();
+}
+function addAssessment(presetTerm){
+  showAssessmentDetails(presetTerm || "Term 1", null, ({term,year,name}) => {
+    if(!name || !name.trim()) return;
+    const existing = state.assessments.find(a =>
+      a.term===term && a.year===year && (a.name||"").trim().toUpperCase()===name.trim().toUpperCase()
+    );
+    if(existing){
+      ui.selectedAssessmentId = existing.id;
+      ui.activeTab = "assessment";
+      render();
+      showAlert(`"${name.trim()}" already exists â€” switched to it instead of creating a duplicate. Enter marks there.`);
+      return;
+    }
+    const scores = {};
+    state.students.forEach(s => scores[s.id]={});
+    const newAsm = {id:uid("asm"), name:name.trim(), term, year, grade:state.className, createdAt:Date.now(), scores};
+    state.assessments.push(newAsm);
+    ui.selectedAssessmentId = newAsm.id;
+    ui.activeTab = "assessment";
+    persistAndRender();
+    syncPushField(["assessments", newAsm.id], {name:newAsm.name, term, year, grade:newAsm.grade, createdAt:newAsm.createdAt, scores:{}});
+  });
+}
+function removeAssessment(id){
+  if(state.assessments.length<=1){ showAlert("You need at least one assessment."); return; }
+  const msg = SYNC_ENABLED
+    ? "Permanently delete this assessment? This will remove it everywhere â€” including every other teacher's copy once they're back online."
+    : "Delete this assessment? This cannot be undone.";
+  showConfirm(msg, () => {
+    state.assessments = state.assessments.filter(a=>a.id!==id);
+    if(ui.selectedAssessmentId===id) ui.selectedAssessmentId = state.assessments[0] ? state.assessments[0].id : null;
+    persistAndRender();
+    try{ queueCloudPush(); }catch(e){}
+  });
+}
+function updateScore(assessmentId, studentId, subject, value){
+  const a = state.assessments.find(a=>a.id===assessmentId);
+  if(!a) return;
+  if(!a.scores[studentId]) a.scores[studentId]={};
+  if(value===""){
+    delete a.scores[studentId][subject];
+    scheduleSave();
+    if(!refreshEntrySummary()) render();
+    try{ queueCloudPush(); }catch(e){}
+  } else {
+    const num = Math.max(0, Math.min(100, Number(value)));
+    const finalVal = Number.isNaN(num) ? "" : num;
+    a.scores[studentId][subject] = finalVal;
+    scheduleSave();
+    if(!refreshEntrySummary()) render();
+    syncPushField(["assessments", assessmentId, "scores", studentId, subject], finalVal);
+  }
+}
+function parseCSV(text){
+  const lines = text.split(/\r?\n/).filter(l=>l.trim()!=="");
+  if(!lines.length) return null;
+  const header = lines[0].split(",").map(h=>h.trim().toUpperCase());
+  const nameIdx = header.findIndex(h=>h.includes("NAME"));
+  if(nameIdx===-1) return null;
+  const subjIdxMap = {};
+  SUBJECTS.forEach(subj => {
+    const idx = header.findIndex(h => h===subj || h.replace(/\s+/g,"")===subj.replace(/\s+/g,""));
+    if(idx!==-1) subjIdxMap[subj]=idx;
+  });
+  const dataRows = [];
+  for(let i=1;i<lines.length;i++){
+    const cells = lines[i].split(",").map(c=>c.trim());
+    const name = cells[nameIdx];
+    if(!name) continue;
+    const rowScores = {};
+    Object.entries(subjIdxMap).forEach(([subj,idx]) => {
+      const raw = cells[idx];
+      if(raw!==undefined && raw!==""){ const num=Number(raw); if(!Number.isNaN(num)) rowScores[subj]=num; }
+    });
+    dataRows.push({name:name.toUpperCase(), scores:rowScores});
+  }
+  return dataRows;
+}
+function handleCSVUpload(file){
+  const reader = new FileReader();
+  reader.onload = () => {
+    const parsed = parseCSV(String(reader.result));
+    if(!parsed || !parsed.length){
+      showAlert("Couldn't read that file. Upload a CSV with a NAME column and subject columns matching: "+SUBJECTS.join(", "));
+      return;
+    }
+    showAssessmentDetails("Term 1", file.name.replace(/\.csv$/i,""), ({term,year,name}) => {
+      if(!name || !name.trim()) return;
+      const idByName = {};
+      state.students.forEach(s => idByName[s.name.toUpperCase()]=s.id);
+      const newScores = {};
+      parsed.forEach(row => {
+        let sid = idByName[row.name];
+        if(!sid){
+          const newStu = {id:uid("stu"), name:row.name, photo:null};
+          state.students.push(newStu);
+          idByName[row.name]=newStu.id;
+          sid = newStu.id;
+          syncPushField(["students", newStu.id], {name: newStu.name});
+        }
+        newScores[sid]=row.scores;
+      });
+
+      const existing = state.assessments.find(a =>
+        a.term===term && a.year===year && (a.name||"").trim().toUpperCase()===name.trim().toUpperCase()
+      );
+      if(existing){
+        Object.entries(newScores).forEach(([sid, subjScores]) => {
+          existing.scores[sid] = Object.assign({}, subjScores, existing.scores[sid]||{});
+        });
+        ui.selectedAssessmentId = existing.id;
+        ui.activeTab = "assessment";
+        persistAndRender();
+        syncPushField(["assessments", existing.id, "scores"], existing.scores);
+        showAlert(`"${name.trim()}" already existed â€” merged this CSV's marks into it instead of creating a duplicate.`);
+        return;
+      }
+
+      const newAsm = {id:uid("asm"), name:name.trim(), term, year, grade:state.className, createdAt:Date.now(), scores:newScores};
+      state.assessments.push(newAsm);
+      ui.selectedAssessmentId = newAsm.id;
+      ui.activeTab = "assessment";
+      persistAndRender();
+      syncPushField(["assessments", newAsm.id], {name:newAsm.name, term, year, grade:newAsm.grade, createdAt:newAsm.createdAt, scores:newScores});
+    });
+  };
+  reader.readAsText(file);
+}
+
+/* =========================================================
+   EXPORT / IMPORT â€” merge marks entered on other phones
+========================================================= */
+function manualMergeDuplicates(){
+  const result = mergeDuplicateAssessments();
+  if(!result.changed){
+    showAlert("No duplicate assessments found â€” everything is already clean.");
+    return;
+  }
+  persistAndRender();
+  if(firebaseReady()){
+    try{
+      queueCloudPush();
+      showAlert(`Merged ${result.removedIds.length} duplicate assessment(s) into one. This will reach your other devices next time they're online.`);
+    }catch(e){
+      showAlert("Merged on this device, but couldn't reach the shared copy â€” check your internet and try again.");
+    }
+  } else {
+    showAlert(`Merged ${result.removedIds.length} duplicate assessment(s) on this device.`);
+  }
+}
+function emergencyResetRoster(){
+  const isGrade6 = state.currentGrade === "Grade 6";
+  const msg = isGrade6
+    ? `This will WIPE ${state.className}'s roster and assessments (on every synced device) and replace them with the original clean Term 2, 2026 data. Other grades are not affected. This cannot be undone. Are you sure?`
+    : `This will WIPE ${state.className}'s roster and all assessments completely (on every synced device), leaving that grade blank. Other grades are not affected. This cannot be undone. Are you sure?`;
+  showConfirm(msg, () => {
+    const def = defaultGradeData(state.currentGrade);
+    state.students = def.students;
+    state.assessments = def.assessments;
+    ui.selectedAssessmentId = def.assessments.length ? def.assessments[0].id : null;
+    ui.expandedStudent = null;
+    persistAndRender();
+    if(firebaseReady()){
+      try{
+        queueCloudPush();
+        showAlert(`${state.className} reset and pushed to your other devices.`);
+      }catch(e){
+        showAlert("Reset saved on this device, but couldn't reach the shared copy â€” check your internet and try again.");
+      }
+    } else {
+      showAlert(`${state.className} reset on this device.`);
+    }
+  });
+}
+async function exportData(){
+  const payload = {
+    exportedAt: Date.now(),
+    className: state.className,
+    students: state.students.map(s => ({name:s.name})), // names only, no photos (keep file small)
+    assessments: state.assessments.map(a => ({
+      name: a.name, term: a.term, year: a.year,
+      scoresByName: Object.fromEntries(
+        Object.entries(a.scores).map(([sid, sc]) => {
+          const stu = state.students.find(s=>s.id===sid);
+          return [stu ? stu.name : sid, sc];
+        })
+      )
+    })),
+    subjectTeachers: state.subjectTeachers
+  };
+  const stamp = new Date().toISOString().slice(0,10);
+  await saveFile(`bosiango-cbc-export-${stamp}.json`, JSON.stringify(payload, null, 2));
+}
+
+// One-tap backup of every grade at once, so a full backup doesn't
+// require switching to each grade and exporting separately.
+async function exportAllGrades(){
+  saveActiveGradeToStore(); // make sure the grade on screen is up to date in the store first
+  const gradesPayload = {};
+  GRADES.forEach(gName => {
+    const g = state.grades[gName];
+    if(!g) return;
+    gradesPayload[gName] = {
+      className: g.className || gName,
+      students: (g.students||[]).map(s => ({name:s.name})),
+      assessments: (g.assessments||[]).map(a => ({
+        name: a.name, term: a.term, year: a.year,
+        scoresByName: Object.fromEntries(
+          Object.entries(a.scores||{}).map(([sid, sc]) => {
+            const stu = (g.students||[]).find(s=>s.id===sid);
+            return [stu ? stu.name : sid, sc];
+          })
+        )
+      })),
+      subjectTeachers: g.subjectTeachers || {}
+    };
+  });
+  const payload = { exportedAt: Date.now(), allGrades: true, grades: gradesPayload };
+  const stamp = new Date().toISOString().slice(0,10);
+  await saveFile(`bosiango-all-grades-backup-${stamp}.json`, JSON.stringify(payload, null, 2));
+}
+
+// Shared merge logic used by both the single-grade Import and the
+// all-grades backup restore below â€” merges into state.grades[gName]
+// directly (matching students by name), never deletes anything.
+function mergeGradeSlice(gName, incoming){
+  if(!state.grades[gName]) state.grades[gName] = blankGradeData(gName);
+  const target = state.grades[gName];
+  const idByName = {};
+  target.students.forEach(s => idByName[s.name.toUpperCase()]=s.id);
+
+  (incoming.students||[]).forEach(s => {
+    const key = (s.name||"").toUpperCase();
+    if(key && !idByName[key]){
+      const newStu = {id:uid("stu"), name:s.name, photo:null};
+      target.students.push(newStu);
+      idByName[key]=newStu.id;
+      target.assessments.forEach(a => { if(!a.scores[newStu.id]) a.scores[newStu.id]={}; });
+    }
+  });
+
+  let mergedCount = 0, addedCount = 0;
+  (incoming.assessments||[]).forEach(inc => {
+    let t = target.assessments.find(a => a.term===inc.term && a.year===inc.year && a.name===inc.name);
+    if(!t){
+      t = {id:uid("asm"), name:inc.name, term:inc.term, year:inc.year, grade:target.className||gName, createdAt:Date.now(), scores:{}};
+      target.assessments.push(t);
+      addedCount++;
+    }
+    Object.entries(inc.scoresByName||{}).forEach(([name, subjScores]) => {
+      const sid = idByName[(name||"").toUpperCase()];
+      if(!sid) return;
+      if(!t.scores[sid]) t.scores[sid]={};
+      Object.entries(subjScores||{}).forEach(([subj,val]) => {
+        const existing = t.scores[sid][subj];
+        const isEmpty = existing===undefined || existing===null || existing==="";
+        if(isEmpty && val!==undefined && val!==null && val!==""){
+          t.scores[sid][subj]=val;
+          mergedCount++;
+        }
+      });
+    });
+  });
+
+  if(incoming.subjectTeachers){
+    target.subjectTeachers = target.subjectTeachers || {};
+    Object.entries(incoming.subjectTeachers).forEach(([subj,name]) => {
+      if(name && !target.subjectTeachers[subj]) target.subjectTeachers[subj] = name;
+    });
+  }
+  return {mergedCount, addedCount};
+}
+
+function importData(file){
+  const reader = new FileReader();
+  reader.onload = () => {
+    let data;
+    try{ data = JSON.parse(String(reader.result)); }
+    catch(e){ showAlert("Couldn't read that file â€” it doesn't look like a valid export."); return; }
+
+    // Full "Export All Grades" backup file â€” restore every grade in it.
+    if(data && data.allGrades && data.grades && typeof data.grades === "object"){
+      const gradeNames = Object.keys(data.grades);
+      if(!gradeNames.length){ showAlert("That backup file doesn't contain any grades."); return; }
+      showConfirm(`This is a full backup covering ${gradeNames.length} grade(s). Restore it into the app? This won't delete anything â€” it only fills in and adds scores.`, () => {
+        let totalMerged = 0, totalAdded = 0;
+        gradeNames.forEach(gName => {
+          const r = mergeGradeSlice(gName, data.grades[gName]);
+          totalMerged += r.mergedCount; totalAdded += r.addedCount;
+        });
+        syncActiveGradeFromStore();
+        if(ui.selectedAssessmentId && !state.assessments.find(a=>a.id===ui.selectedAssessmentId)){
+          ui.selectedAssessmentId = state.assessments.length ? state.assessments[state.assessments.length-1].id : null;
+        }
+        persistAndRender();
+        try{ queueCloudPush(); }catch(e){}
+        showAlert(`Backup restored: merged ${totalMerged} score(s) across ${gradeNames.length} grade(s)${totalAdded?`, added ${totalAdded} new assessment(s)`:""}.`);
+      });
+      return;
+    }
+
+    if(!data || !Array.isArray(data.assessments)){ showAlert("That file doesn't look like a BOSIANGO 2026 Assessment export."); return; }
+
+    showConfirm(`Merge marks from this file into your current data? This won't delete anything â€” it only fills in and adds scores.`, () => {
+      const idByName = {};
+      state.students.forEach(s => idByName[s.name.toUpperCase()]=s.id);
+
+      (data.students||[]).forEach(s => {
+        const key = (s.name||"").toUpperCase();
+        if(key && !idByName[key]){
+          const newStu = {id:uid("stu"), name:s.name, photo:null};
+          state.students.push(newStu);
+          idByName[key]=newStu.id;
+          state.assessments.forEach(a => { if(!a.scores[newStu.id]) a.scores[newStu.id]={}; });
+        }
+      });
+
+      let mergedCount = 0, addedCount = 0;
+      data.assessments.forEach(incoming => {
+        let target = state.assessments.find(a =>
+          a.term===incoming.term && a.year===incoming.year && a.name===incoming.name
+        );
+        if(!target){
+          target = {id:uid("asm"), name:incoming.name, term:incoming.term, year:incoming.year, grade:state.className, createdAt:Date.now(), scores:{}};
+          state.assessments.push(target);
+          addedCount++;
+        }
+        Object.entries(incoming.scoresByName||{}).forEach(([name, subjScores]) => {
+          const sid = idByName[(name||"").toUpperCase()];
+          if(!sid) return;
+          if(!target.scores[sid]) target.scores[sid]={};
+          Object.entries(subjScores||{}).forEach(([subj,val]) => {
+            const existing = target.scores[sid][subj];
+            const isEmpty = existing===undefined || existing===null || existing==="";
+            if(isEmpty && val!==undefined && val!==null && val!==""){
+              target.scores[sid][subj] = val;
+              mergedCount++;
+            }
+          });
+        });
+      });
+
+      if(data.subjectTeachers){
+        Object.entries(data.subjectTeachers).forEach(([subj,name]) => {
+          if(name && !state.subjectTeachers[subj]) state.subjectTeachers[subj] = name;
+        });
+      }
+
+      persistAndRender();
+      try{ queueCloudPush(); }catch(e){}
+      showAlert(`Merged ${mergedCount} scores${addedCount?` and added ${addedCount} new assessment(s)`:""}.`);
+    });
+  };
+  reader.readAsText(file);
+}
+
+/* =========================================================
+   RENDER HELPERS
+========================================================= */
+function avatarHTML(photo, name, size, studentIdForClick){
+  const initials = (name||"?").split(" ").filter(Boolean).slice(0,2).map(w=>w[0]).join("").toUpperCase();
+  const clickAttr = studentIdForClick ? `onclick="triggerPhotoUpload('${studentIdForClick}')" title="Tap to change photo"` : "";
+  if(photo){
+    return `<div class="avatar" style="width:${size}px;height:${size}px" ${clickAttr}><img src="${photo}"></div>`;
+  }
+  return `<div class="avatar" style="width:${size}px;height:${size}px;font-size:${Math.max(9,size*0.28)}px" ${clickAttr}>${esc(initials)}</div>`;
+}
+function gradePill(grade){
+  const c = GRADE_COLORS[grade]||GRADE_COLORS["-"];
+  return `<span class="grade-pill" style="color:${c};border-color:${c}">${grade}</span>`;
+}
+function positionBadge(pos, total){
+  const color = pos===1 ? "var(--gold)" : "var(--navy-soft)";
+  return `<span class="pos" style="color:${color};display:inline-flex;align-items:center;gap:3px;">${pos===1?icon("trophy",12):""}${pos}<span style="color:var(--navy-line)">/${total}</span></span>`;
+}
+function barChart(data, labelKey, valKey, maxVal, fmt){
+  maxVal = maxVal || Math.max(1, ...data.map(d=>d[valKey]||0));
+  fmt = fmt || (v=>v);
+  return '<div class="barchart">' + data.map(d => {
+    const h = Math.max(2, ((d[valKey]||0)/maxVal)*100);
+    return `<div class="bar-col">
+      <div class="bar-val">${fmt(d[valKey])}</div>
+      <div class="bar" style="height:${h}%"></div>
+      <div class="bar-label">${esc(d[labelKey])}</div>
+    </div>`;
+  }).join("") + '</div>';
+}
+
+/* =========================================================
+   TAB: ROSTER
+========================================================= */
+function renderRoster(){
+  const cards = state.students.map(stu => `
+    <div class="card">
+      ${avatarHTML(stu.photo, stu.name, 44, stu.id)}
+      <div style="flex:1;min-width:0;">
+        <input class="plain" style="border:none;border-bottom:1px solid var(--navy-line);font-weight:600;width:100%;padding:2px 0;"
+          value="${esc(stu.name)}" onchange="renameStudent('${stu.id}', this.value)">
+        <p style="font-size:10px;color:var(--navy-soft);margin:2px 0 0;">Tap photo to upload</p>
+      </div>
+      <button style="background:none;border:none;cursor:pointer;color:var(--navy-soft);" onclick="removeStudent('${stu.id}')" title="Remove">${icon("trash",15)}</button>
+    </div>`).join("");
+
+  const teacherRows = SUBJECTS.map(subj => `
+    <div class="subject-teacher-row">
+      <span>${subj}</span>
+      <input type="text" value="${esc(state.subjectTeachers[subj]||"")}" placeholder="Teacher's name"
+        onchange="setSubjectTeacher('${subj}', this.value);">
+    </div>`).join("");
+
+  return `
+    <div class="between">
+      <div class="row">
+        <label class="field-label" style="margin:0;">Class</label>
+        <input type="text" class="plain" style="border:none;border-bottom:1px solid var(--navy-line);font-weight:600;"
+          value="${esc(state.className)}" onchange="setClassName(this.value);">
+        <label class="field-label" style="margin:0;">Class Teacher</label>
+        <input type="text" class="plain" style="border:none;border-bottom:1px solid var(--navy-line);font-weight:600;"
+          value="${esc(state.classTeacher||'')}" placeholder="Teacher's name" onchange="setClassTeacher(this.value);">
+      </div>
+      <button class="btn" onclick="addStudent()">${icon("plus",16)} Add student</button>
+    </div>
+    <p class="small-note">${state.students.length} students Â· ${state.assessments.length} assessment${state.assessments.length===1?"":"s"} recorded</p>
+    <div class="grid-cards">${cards}</div>
+    <div style="margin-top:30px;padding-top:20px;border-top:1px solid var(--navy-line);">
+      <h3 style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--navy-soft);margin:0 0 10px;">Subject Teachers</h3>
+      <div class="subject-teacher-grid">${teacherRows}</div>
+    </div>
+    <div style="margin-top:30px;padding-top:20px;border-top:1px solid var(--navy-line);">
+      <h3 style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--navy-soft);margin:0 0 6px;">Share Data With Other Teachers</h3>
+      <p class="small-note">Each teacher enters their subject on their own phone, taps <b>Export</b>, and sends you the file (e.g. via WhatsApp). You then tap <b>Import</b> here to merge it into this master copy.</p>
+      <div class="row">
+        <button class="btn outline sm" onclick="exportData()">${icon("download",14)} Export ${esc(state.className)}</button>
+        <button class="btn outline sm" onclick="document.getElementById('importInput').click()">${icon("upload",14)} Import</button>
+      </div>
+    </div>
+    <div style="margin-top:30px;padding-top:20px;border-top:1px solid var(--navy-line);">
+      <h3 style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--navy-soft);margin:0 0 6px;">Full Backup</h3>
+      <p class="small-note">Saves every grade's roster and marks into a single file â€” a full safety copy in one tap, in case anything ever happens to this app. Restoring only fills in blanks â€” it never overwrites a mark that's already there.</p>
+      <div class="row">
+        <button class="btn outline sm" onclick="exportAllGrades()">${icon("download",14)} Export All Grades</button>
+        <button class="btn outline sm" onclick="document.getElementById('importInput').click()">${icon("upload",14)} Restore All Grades</button>
+      </div>
+    </div>
+    <div style="margin-top:30px;padding-top:20px;border-top:1px solid var(--navy-line);">
+      <h3 style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--navy-soft);margin:0 0 6px;">Fix Split/Duplicate Assessments</h3>
+      <p class="small-note">If different teachers each created their own copy of the same assessment (e.g. two "Mid Term 3" entries), tap this to combine them into one â€” no marks are lost, they're merged together and the extra copy is removed everywhere.</p>
+      <button class="btn outline sm" onclick="manualMergeDuplicates()">${icon("check",14)} Merge duplicate assessments now</button>
+    </div>
+    <div style="margin-top:30px;padding-top:20px;border-top:1px solid var(--navy-line);">
+      <h3 style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--navy-soft);margin:0 0 6px;">App Lock (this device only)</h3>
+      <p class="small-note">${getLockPassword() ? "A password is currently set on this device." : "No password set â€” anyone who opens this file on this device can use it freely."} This is a screen lock, not full security â€” set it to keep casual browsers out.</p>
+      <div class="row">
+        <button class="btn outline sm" onclick="setAppLock()">${icon("alert",14)} ${getLockPassword() ? "Change password" : "Set password"}</button>
+        ${getLockPassword() ? `<button class="btn outline sm" onclick="removeAppLock()">${icon("x",14)} Remove lock</button>` : ""}
+      </div>
+    </div>
+    <div style="margin-top:30px;padding-top:20px;border-top:1px solid var(--be);">
+      <h3 style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--be);margin:0 0 6px;">Emergency: Reset ${esc(state.className)}</h3>
+      <p class="small-note">If duplicates or a data mix-up happen again, this resets ${esc(state.className)} only (other grades are untouched) and pushes it to every synced device. Only use this on one device â€” everyone else will pick it up automatically next time they open the app.</p>
+      <button class="btn outline sm" style="border-color:var(--be);color:var(--be);" onclick="emergencyResetRoster()">${icon("alert",14)} Reset ${esc(state.className)}</button>
+    </div>`;
+}
+
+/* =========================================================
+   TAB: ENTER MARKS
+========================================================= */
+function renderEntry(){
+  const asm = state.assessments.find(a=>a.id===ui.selectedAssessmentId);
+  const asmOptions = state.assessments.map(a=>`<option value="${a.id}" ${a.id===ui.selectedAssessmentId?"selected":""}>${esc(a.name)}</option>`).join("");
+  const subjOptions = SUBJECTS.map(s=>`<option value="${s}" ${s===ui.mySubject?"selected":""}>${s}</option>`).join("");
+
+  let body;
+  if(!asm){
+    body = `<div class="empty"><p>No assessments yet.</p><button class="btn" onclick="addAssessment()">${icon("plus",16)} Create an assessment</button></div>`;
+  }else{
+    let filled=0, sum=0, count=0;
+    const rows = state.students.map((stu, idx) => {
+      const val = (asm.scores[stu.id]||{})[ui.mySubject];
+      if(val!==undefined && val!==null && val!==""){ filled++; sum+=Number(val); count++; }
+      return `<tr>
+        <td><div style="display:flex;align-items:center;gap:8px;">${avatarHTML(stu.photo, stu.name, 22)}<span>${esc(stu.name)}</span></div></td>
+        <td style="text-align:right;">
+          <input type="number" inputmode="numeric" min="0" max="100" enterkeyhint="next" data-entry-idx="${idx}" style="width:70px;text-align:right;" value="${val===undefined||val===null?"":val}"
+            onchange="updateScore('${asm.id}','${stu.id}','${ui.mySubject.replace(/'/g,"\\'")}', this.value)"
+            onkeydown="if(event.key==='Enter'){event.preventDefault(); this.blur(); focusNextEntryInput(${idx});}">
+        </td>
+      </tr>`;
+    }).join("");
+    const avg = count ? (sum/count).toFixed(1) : null;
+    body = `
+      <p class="small-note" id="entrySummaryLine">${filled} of ${state.students.length} entered${avg!==null ? " Â· class average "+avg+"%" : ""}</p>
+      <table><thead><tr><th>Student</th><th style="text-align:right;">${esc(ui.mySubject)} (%)</th></tr></thead><tbody>${rows}</tbody></table>`;
+  }
+
+  return `
+    <div class="row" style="align-items:flex-end;margin-bottom:20px;">
+      <div><label class="field-label">Assessment</label><select onchange="ui.selectedAssessmentId=this.value; render();">${asmOptions}</select></div>
+      <div><label class="field-label">I'm entering marks for</label><select onchange="ui.mySubject=this.value; render();">${subjOptions}</select></div>
+      <div><label class="field-label">Teacher name</label>
+        <input type="text" value="${esc(state.subjectTeachers[ui.mySubject]||"")}" placeholder="Your name"
+          onchange="setSubjectTeacher('${ui.mySubject.replace(/'/g,"\\'")}', this.value);"></div>
+    </div>
+    ${body}`;
+}
+
+/* =========================================================
+   TAB: ASSESSMENT
+========================================================= */
+function renderAssessment(){
+  const asm = state.assessments.find(a=>a.id===ui.selectedAssessmentId);
+  const asmOptions = state.assessments.map(a=>`<option value="${a.id}" ${a.id===ui.selectedAssessmentId?"selected":""}>${esc(a.name)}</option>`).join("");
+
+  const header = `
+    <div class="between">
+      <div class="row">
+        <select onchange="ui.selectedAssessmentId=this.value; render();">${asmOptions}</select>
+        ${state.assessments.length>1 ? `<button style="background:none;border:none;cursor:pointer;color:var(--navy-soft);" onclick="removeAssessment('${ui.selectedAssessmentId}')" title="Delete">${icon("trash",15)}</button>` : ""}
+      </div>
+      <div class="row">
+        <button class="btn outline sm" onclick="openClassReport()">${icon("download",14)} Download Class Report</button>
+        <button class="btn outline sm" onclick="downloadAllLearnerReports(this)">${icon("download",14)} Download All Learner Reports</button>
+        <button class="btn outline sm" onclick="document.getElementById('csvInput').click()">${icon("upload",14)} Upload CSV</button>
+        <button class="btn sm" onclick="addAssessment()">${icon("plus",14)} New assessment</button>
+      </div>
+    </div>`;
+
+  if(!asm){
+    return header + `<div class="empty"><p>No assessments yet.</p><button class="btn" onclick="addAssessment()">${icon("plus",16)} Create an assessment</button></div>`;
+  }
+
+  const rows = computeRows(state.students, asm);
+  const sortedRows = [...rows].sort((a,b)=>a.position-b.position);
+  const rankData = sortedRows.map(r=>({name:r.name.split(" ")[0], marks:r.totalMarks}));
+  const subjAvgs = classAverages(rows);
+  const subjData = SUBJECTS.map(s=>({subject:s.replace(" & ","&").slice(0,8), avg:Number(subjAvgs[s].toFixed(1))}));
+
+  const tableRows = sortedRows.map((r,idx) => {
+    const expanded = ui.expandedStudent===r.studentId;
+    let expandHTML = "";
+    if(expanded){
+      const fields = SUBJECTS.map(subj => {
+        const cur = r.perSubject.find(p=>p.subject===subj);
+        return `<div class="subj-field">
+          <label>${subj}</label>
+          <input type="number" min="0" max="100" value="${cur.pct===null?"":cur.pct}"
+            onclick="event.stopPropagation()"
+            onchange="event.stopPropagation();updateScore('${asm.id}','${r.studentId}','${subj.replace(/'/g,"\\'")}', this.value)">
+          ${cur.points!==null?`<span style="font-size:10px;color:var(--navy-soft);"> (${cur.points} pts)</span>`:""}
+        </div>`;
+      }).join("");
+      expandHTML = `<tr class="expand-panel"><td colspan="6" style="padding:12px;">
+        <div class="subj-grid">${fields}</div>
+        <div style="margin-top:10px;">
+          <button class="btn sm outline" onclick="event.stopPropagation();openReport('${r.studentId}')">${icon("download",14)} Download report</button>
+        </div>
+      </td></tr>`;
+    }
+    return `<tr class="${idx%2?'zebra':''}" style="cursor:pointer;" onclick="ui.expandedStudent = ui.expandedStudent==='${r.studentId}'?null:'${r.studentId}'; render();">
+        <td>${positionBadge(r.position, rows.length)}</td>
+        <td style="border-left:2px solid var(--navy);"><div style="display:flex;align-items:center;gap:8px;">${avatarHTML(r.photo, r.name, 24)}<span style="font-weight:600;">${esc(r.name)}</span></div></td>
+        <td style="text-align:right;font-weight:600;border-left:2px solid var(--navy);">${r.totalMarks||0}</td>
+        <td style="text-align:right;font-weight:600;border-left:2px solid var(--navy);">${r.totalPoints||0}/${SUBJECTS.length*8}</td>
+        <td style="text-align:right;color:var(--navy-soft);border-left:1px solid var(--navy-line);">${r.avgPoints!==null?r.avgPoints.toFixed(2):"â€”"}</td>
+        <td style="text-align:center;border-left:2px solid var(--navy);">${gradePill(r.grade)}</td>
+        <td style="text-align:center;">${expanded?icon("chevronDown",14):icon("chevronRight",14)}</td>
+      </tr>${expandHTML}`;
+  }).join("");
+
+  return header + `
+    <div style="display:grid;grid-template-columns:1fr;gap:14px;margin:20px 0;" class="two-col">
+      <div class="chart-card"><h3>Class ranking â€” total marks</h3>${barChart(rankData,"name","marks")}</div>
+      <div class="chart-card"><h3>Class average by subject (%)</h3>${barChart(subjData,"subject","avg",100, v=>v+"%")}</div>
+    </div>
+    <div style="border:1px solid var(--navy-line);border-radius:2px;overflow-x:auto;">
+      <table>
+        <thead><tr><th style="width:30px;">Pos</th><th style="border-left:2px solid var(--navy);">Student</th><th style="text-align:right;border-left:2px solid var(--navy);">Total Marks</th><th style="text-align:right;border-left:2px solid var(--navy);">Total Points</th><th style="text-align:right;border-left:1px solid var(--navy-line);">Avg pts</th><th style="text-align:center;border-left:2px solid var(--navy);">Grade</th><th style="width:20px;"></th></tr></thead>
+        <tbody>${tableRows}</tbody>
+      </table>
+    </div>`;
+}
+
+/* =========================================================
+   TAB: TERMS
+========================================================= */
+function renderTerms(){
+  const byTerm = {};
+  TERMS.forEach(t => {
+    const matches = state.assessments.filter(a=>a.term===t);
+    byTerm[t] = matches.length ? matches.reduce((a,b)=>a.createdAt>b.createdAt?a:b) : null;
+  });
+
+  const icons = TERMS.map(t => {
+    const active = ui.selectedTerm===t;
+    const has = !!byTerm[t];
+    return `<button class="term-icon ${active?'active':''}" onclick="ui.selectedTerm='${t}'; render();">
+      ${icon("calendar", 18)}
+      <span>${t}</span>
+      ${!has?'<small>No data</small>':''}
+    </button>`;
+  }).join("");
+
+  const termAsm = byTerm[ui.selectedTerm];
+  let termSection;
+  if(!termAsm){
+    termSection = `<div class="empty"><p>No assessment recorded for ${ui.selectedTerm} yet. Add one from the Assessment tab and tag it ${ui.selectedTerm}.</p></div>`;
+  }else{
+    const rows = computeRows(state.students, termAsm);
+    const sortedTermRows = [...rows].sort((a,b)=>a.position-b.position);
+    const trows = sortedTermRows.map((r,idx) => `<tr class="${idx%2?'zebra':''}">
+      <td>${positionBadge(r.position, rows.length)}</td>
+      <td style="border-left:2px solid var(--navy);"><div style="display:flex;align-items:center;gap:8px;">${avatarHTML(r.photo,r.name,22)}<span style="font-weight:600;">${esc(r.name)}</span></div></td>
+      <td style="text-align:right;font-weight:600;border-left:2px solid var(--navy);">${r.totalMarks||0}</td>
+      <td style="text-align:right;font-weight:600;border-left:2px solid var(--navy);">${r.totalPoints||0}/${SUBJECTS.length*8}</td>
+      <td style="text-align:right;color:var(--navy-soft);border-left:1px solid var(--navy-line);">${r.avgPoints!==null?r.avgPoints.toFixed(2):"â€”"}</td>
+      <td style="text-align:center;border-left:2px solid var(--navy);">${gradePill(r.grade)}</td>
+      <td style="text-align:center;"><button style="background:none;border:none;cursor:pointer;color:var(--navy-soft);" onclick="openReport('${r.studentId}')" title="Download report">${icon("download",14)}</button></td>
+    </tr>`).join("");
+    termSection = `<div style="border:1px solid var(--navy-line);border-radius:2px;overflow-x:auto;margin-bottom:30px;">
+      <p style="font-size:11px;color:var(--navy-soft);padding:10px 10px 0;">${esc(termAsm.name)} Â· ${rows.length} learners</p>
+      <table style="margin-top:6px;"><thead><tr><th style="width:30px;">Pos</th><th style="border-left:2px solid var(--navy);">Student</th><th style="text-align:right;border-left:2px solid var(--navy);">Total Marks</th><th style="text-align:right;border-left:2px solid var(--navy);">Total Points</th><th style="text-align:right;border-left:1px solid var(--navy-line);">Avg pts</th><th style="text-align:center;border-left:2px solid var(--navy);">Grade</th><th style="width:20px;"></th></tr></thead>
+      <tbody>${trows}</tbody></table></div>`;
+  }
+
+  // Year overview
+  const perTermRows = {};
+  TERMS.forEach(t => perTermRows[t] = computeRows(state.students, byTerm[t]));
+  const yearRows = state.students.map(stu => {
+    const marksByTerm = {}; let sum=0, count=0;
+    TERMS.forEach(t => {
+      const r = perTermRows[t].find(x=>x.studentId===stu.id);
+      const marks = r ? r.totalMarks : null;
+      marksByTerm[t] = marks;
+      if(marks!==null && marks!==undefined && byTerm[t]){ sum+=marks; count++; }
+    });
+    return {studentId:stu.id, name:stu.name, marksByTerm, yearAvg: count>0 ? sum/count : null};
+  }).sort((a,b)=>(b.yearAvg||0)-(a.yearAvg||0));
+  yearRows.forEach((r,i)=>r.position=i+1);
+
+  const yearChartData = TERMS.map(t => {
+    const rows = perTermRows[t];
+    const vals = rows.map(r=>r.totalMarks).filter(v=>v!==null&&v!==undefined);
+    return {term:t, average: vals.length ? Number((vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(1)) : 0};
+  });
+
+  const yearTableRows = yearRows.map((r,idx) => `<tr class="${idx%2?'zebra':''}">
+    <td>${r.position}</td>
+    <td style="font-weight:600;">${esc(r.name)}</td>
+    ${TERMS.map(t => `<td style="text-align:right;color:var(--navy-soft);">${r.marksByTerm[t]!==null&&r.marksByTerm[t]!==undefined?r.marksByTerm[t]:"â€”"}</td>`).join("")}
+    <td style="text-align:right;font-weight:600;">${r.yearAvg!==null?r.yearAvg.toFixed(1):"â€”"}</td>
+  </tr>`).join("");
+
+  return `
+    <div class="term-icons">${icons}</div>
+    ${termSection}
+    <h3 style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--navy-soft);margin:0 0 12px;">Full Year Overview</h3>
+    <div class="chart-card"><h3>Class average total marks by term</h3>${barChart(yearChartData,"term","average")}</div>
+    <div style="border:1px solid var(--navy-line);border-radius:2px;overflow-x:auto;margin-top:14px;">
+      <table><thead><tr><th style="width:30px;">Pos</th><th>Student</th>${TERMS.map(t=>`<th style="text-align:right;">${t}</th>`).join("")}<th style="text-align:right;">Year avg</th></tr></thead>
+      <tbody>${yearTableRows}</tbody></table>
+    </div>`;
+}
+
+/* =========================================================
+   TAB: COMPARE
+========================================================= */
+function renderCompare(){
+  if(state.assessments.length<2){
+    return `<div class="empty"><p>Add a second assessment to compare progress over time.</p></div>`;
+  }
+  if(!ui.compareA) ui.compareA = state.assessments[state.assessments.length-2].id;
+  if(!ui.compareB) ui.compareB = state.assessments[state.assessments.length-1].id;
+  const asmA = state.assessments.find(a=>a.id===ui.compareA);
+  const asmB = state.assessments.find(a=>a.id===ui.compareB);
+  const optsA = state.assessments.map(a=>`<option value="${a.id}" ${a.id===ui.compareA?"selected":""}>${esc(a.name)}</option>`).join("");
+  const optsB = state.assessments.map(a=>`<option value="${a.id}" ${a.id===ui.compareB?"selected":""}>${esc(a.name)}</option>`).join("");
+
+  const picker = `
+    <div class="row" style="margin-bottom:20px;">
+      <div class="row"><span class="field-label" style="margin:0;">From</span><select onchange="ui.compareA=this.value; render();">${optsA}</select></div>
+      ${icon("arrows",16)}
+      <div class="row"><span class="field-label" style="margin:0;">To</span><select onchange="ui.compareB=this.value; render();">${optsB}</select></div>
+    </div>`;
+
+  if(!asmA || !asmB) return picker;
+
+  const rowsA = computeRows(state.students, asmA);
+  const rowsB = computeRows(state.students, asmB);
+  const movement = state.students.map(stu => {
+    const ra = rowsA.find(r=>r.studentId===stu.id);
+    const rb = rowsB.find(r=>r.studentId===stu.id);
+    if(!ra || !rb) return null;
+    return {name:stu.name, delta:(rb.totalMarks||0)-(ra.totalMarks||0), posDelta:(ra.position||0)-(rb.position||0), a:ra, b:rb};
+  }).filter(Boolean).sort((x,y)=>y.delta-x.delta);
+
+  const avgAData = state.students.map(stu => {
+    const r = rowsA.find(x=>x.studentId===stu.id);
+    return {name:stu.name.split(" ")[0], marks: r?r.totalMarks:0};
+  });
+  const avgBData = state.students.map(stu => {
+    const r = rowsB.find(x=>x.studentId===stu.id);
+    return {name:stu.name.split(" ")[0], marks: r?r.totalMarks:0};
+  });
+
+  const movementRows = movement.map((m,idx) => {
+    const deltaClass = m.delta>0?"delta-up":m.delta<0?"delta-down":"delta-flat";
+    const rankClass = m.posDelta>0?"delta-up":m.posDelta<0?"delta-down":"delta-flat";
+    return `<tr class="${idx%2?'zebra':''}">
+      <td style="font-weight:600;">${esc(m.name)}</td>
+      <td style="text-align:right;color:var(--navy-soft);">${m.a.totalMarks}</td>
+      <td style="text-align:right;font-weight:600;">${m.b.totalMarks}</td>
+      <td style="text-align:right;color:var(--navy-soft);">${((m.a.totalMarks+m.b.totalMarks)/2).toFixed(1)}</td>
+      <td style="text-align:right;" class="${deltaClass}">${m.delta>0?"+":""}${m.delta}</td>
+      <td style="text-align:center;" class="${rankClass}">${m.posDelta===0?"â€”":Math.abs(m.posDelta)}</td>
+    </tr>`;
+  }).join("");
+
+  const averagedRows = computeAveragedRows(state.students, asmA, asmB);
+  const sortedAvgRows = [...averagedRows].sort((a,b)=>a.position-b.position);
+  const avgRankRows = sortedAvgRows.map((r,idx) => {
+    const subjCells = r.perSubject.map(p => `<td style="text-align:center;">${p.pct===null?"â€”":p.pct}</td>`).join("");
+    return `<tr class="${idx%2?'zebra':''}">
+      <td>${positionBadge(r.position, sortedAvgRows.length)}</td>
+      <td style="font-weight:600;">${esc(r.name)}</td>
+      ${subjCells}
+      <td style="text-align:right;font-weight:700;">${r.totalMarks}</td>
+      <td style="text-align:right;color:var(--navy-soft);">${r.avgPoints!==null?r.avgPoints.toFixed(2):"â€”"}</td>
+      <td style="text-align:center;">${gradePill(r.grade)}</td>
+    </tr>`;
+  }).join("");
+  const subjHeaders = SUBJECTS.map(s=>`<th style="text-align:center;">${s.replace(" & ","&").slice(0,7)}</th>`).join("");
+
+  return picker + `
+    <div style="display:grid;grid-template-columns:1fr;gap:14px;margin-bottom:20px;">
+      <div class="chart-card"><h3>${esc(asmA.name)} â€” total marks</h3>${barChart(avgAData,"name","marks")}</div>
+      <div class="chart-card"><h3>${esc(asmB.name)} â€” total marks</h3>${barChart(avgBData,"name","marks")}</div>
+    </div>
+    <div style="border:1px solid var(--navy-line);border-radius:2px;overflow-x:auto;">
+      <table><thead><tr><th>Student</th><th style="text-align:right;">${esc(asmA.name)}</th><th style="text-align:right;">${esc(asmB.name)}</th><th style="text-align:right;">Average</th><th style="text-align:right;">Change</th><th style="text-align:center;">Rank move</th></tr></thead>
+      <tbody>${movementRows}</tbody></table>
+    </div>
+
+    <h3 style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--navy-soft);margin:24px 0 10px;">Average Performance â€” Ranked (per subject)</h3>
+    <p class="small-note">Each subject shown here is the average of that subject across both assessments, then ranked as its own result â€” not just an average of the two totals.</p>
+    <div class="row" style="margin-bottom:10px;">
+      <button class="btn outline sm" onclick="openAverageReport()">${icon("download",14)} Download Average Report</button>
+    </div>
+    <div style="border:1px solid var(--navy-line);border-radius:2px;overflow-x:auto;">
+      <table style="font-size:10px;min-width:800px;">
+        <thead><tr><th style="width:30px;">Pos</th><th>Student</th>${subjHeaders}<th style="text-align:right;">Total</th><th style="text-align:right;">Avg pts</th><th style="text-align:center;">Grade</th></tr></thead>
+        <tbody>${avgRankRows}</tbody>
+      </table>
+    </div>`;
+}
+
+/* =========================================================
+   REPORT CARD
+========================================================= */
+function buildStudentReportCardHTML(studentId, opts){
+  opts = opts || {};
+  const asm = state.assessments.find(a=>a.id===ui.selectedAssessmentId) || state.assessments[0];
+  const rows = computeRows(state.students, asm);
+  const row = rows.find(r=>r.studentId===studentId);
+  if(!row) return null;
+  const comment = (REPORT_COMMENTS[row.grade]||REPORT_COMMENTS["-"]).replace("{first}", firstName(row.name));
+  const classAvgs = classAverages(rows);
+  const avgMarks = row.perSubject.length ? (row.totalMarks / row.perSubject.length) : 0;
+
+  const subjRows = row.perSubject.map((p,i) => {
+    const band = pointsToBand(p.points);
+    const remarkSet = p.subject === "KISWAHILI" ? SUBJECT_COMMENTS_KISWAHILI : SUBJECT_COMMENTS;
+    const classAvg = classAvgs[p.subject];
+    return `<tr style="border-bottom:1px solid var(--navy-line);">
+      <td>${p.subject}</td>
+      <td style="text-align:center;">${p.pct===null?"â€”":p.pct}</td>
+      <td style="text-align:center;color:var(--navy-soft);">${classAvg!==undefined?classAvg.toFixed(1):"â€”"}</td>
+      <td style="text-align:center;">${p.points===null?"â€”":p.points}</td>
+      <td style="text-align:center;">${LEVEL_NUM[band]}</td>
+      <td>${remarkSet[band]}</td>
+      <td>${esc(state.subjectTeachers[p.subject]||"â€”")}</td>
+    </tr>`;
+  }).join("");
+
+  const chartData = row.perSubject.map(p=>({subject:p.subject.replace(" & ","&").slice(0,8), marks:p.pct||0}));
+  const logoHTML = state.schoolLogo ? `<div style="text-align:center;margin-bottom:8px;"><img src="${state.schoolLogo}" style="width:64px;height:64px;border-radius:50%;object-fit:cover;border:1px solid var(--navy-line);"></div>` : "";
+  const closeRow = opts.withButtons === false ? "" : `<div class="report-close-row no-print">
+          <button class="btn sm outline" onclick="downloadReportPDF('${row.name.replace(/[^A-Za-z0-9]+/g,"_")}_Report', this)">${icon("printer",14)} Download PDF</button>
+          <button style="background:none;border:none;cursor:pointer;" onclick="closeReport()">${icon("x",18)}</button>
+        </div>`;
+
+  const html = `<div class="report-card" id="${opts.elementId||"printable"}">
+        ${closeRow}
+        ${logoHTML}
+        <h2 style="text-align:center;font-size:18px;margin:0;">BOSIANGO COMPREHENSIVE SCHOOL</h2>
+        <p style="text-align:center;font-size:11px;color:var(--navy-soft);margin:4px 0 16px;">LEARNER TERM SUMMATIVE REPORT</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:13px;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--navy-line);">
+          <div><b style="color:var(--navy-soft);">NAME: </b>${esc(row.name)}</div>
+          <div><b style="color:var(--navy-soft);">GRADE: </b>${esc(state.className)}</div>
+          <div><b style="color:var(--navy-soft);">ASSESSMENT: </b>${esc(asm ? asm.name : "")}</div>
+          <div><b style="color:var(--navy-soft);">POSITION: </b>${row.position} out of ${rows.length}</div>
+        </div>
+        <p style="font-size:9px;color:var(--navy-soft);margin-bottom:10px;">POINTS SCALE: 90-100=8(EE) | 75-89=7(EE) | 58-74=6(ME) | 41-57=5(ME) | 31-40=4(AE) | 21-30=3(AE) | 11-20=2(BE) | 1-10=1(BE)</p>
+        <table style="margin-bottom:14px;font-size:10.5px;">
+          <thead><tr><th>SUBJECT</th><th style="text-align:center;">MARKS (%)</th><th style="text-align:center;">CLASS AVG</th><th style="text-align:center;">POINTS</th><th style="text-align:center;">LEVEL</th><th>REMARK</th><th>TEACHER</th></tr></thead>
+          <tbody>
+            ${subjRows}
+            <tr style="border-top:1px solid var(--navy);font-weight:700;">
+              <td>TOTAL</td><td style="text-align:center;">${row.totalMarks}</td><td></td><td style="text-align:center;">${row.totalPoints}/${SUBJECTS.length*8}</td><td></td><td></td><td></td>
+            </tr>
+            <tr style="font-weight:700;">
+              <td>AVERAGE (%)</td><td style="text-align:center;">${avgMarks.toFixed(1)}</td><td></td><td></td><td></td><td></td><td></td>
+            </tr>
+            <tr style="font-weight:700;">
+              <td>AVERAGE POINTS</td><td></td><td></td><td style="text-align:center;">${row.avgPoints!==null?row.avgPoints.toFixed(2):"â€”"}</td><td></td><td>${row.grade}</td><td></td>
+            </tr>
+          </tbody>
+        </table>
+        <p style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--navy-soft);margin-bottom:8px;">Subject Performance</p>
+        <div class="chart-card">${barChart(chartData,"subject","marks",100,v=>v+"%")}</div>
+        <p style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--navy-soft);margin:16px 0 4px;">Class Teacher's Comment</p>
+        <p style="font-size:13px;font-style:italic;margin:0 0 20px;">${esc(comment)}</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:12px;padding-top:10px;border-top:1px solid var(--navy-line);">
+          <div><b style="color:var(--navy-soft);">CLASS TEACHER: </b>${esc(state.classTeacher||"â€”")}</div>
+          <div><b style="color:var(--navy-soft);">SIGN: </b>________________</div>
+          <div><b style="color:var(--navy-soft);">PARENT/GUARDIAN: </b>________________</div>
+          <div><b style="color:var(--navy-soft);">SIGN: </b>________________</div>
+        </div>
+      </div>`;
+  return html;
+}
+function openReport(studentId){
+  const html = buildStudentReportCardHTML(studentId);
+  if(!html){ return; }
+  document.getElementById("reportRoot").innerHTML = `
+    <div class="modal-overlay" style="align-items:flex-start;overflow-y:auto;padding:24px 12px;">
+      ${html}
+    </div>`;
+}
+function closeReport(){ document.getElementById("reportRoot").innerHTML = ""; }
+
+// Builds ONE PDF containing every learner's individual report, one
+// learner per page, in class rank order â€” instead of downloading each
+// student's report separately.
+async function downloadAllLearnerReports(btnEl){
+  const asm = state.assessments.find(a=>a.id===ui.selectedAssessmentId) || state.assessments[0];
+  if(!asm){ showAlert("No assessment selected."); return; }
+  const rows = computeRows(state.students, asm).sort((a,b)=>a.position-b.position);
+  if(!rows.length){ showAlert("No learners to include."); return; }
+
+  const originalHTML = btnEl ? btnEl.innerHTML : null;
+  if(btnEl){ btnEl.disabled = true; }
+
+  const stage = document.createElement("div");
+  stage.style.cssText = "position:fixed;left:-99999px;top:0;background:#fff;width:680px;";
+  document.body.appendChild(stage);
+
+  try{
+    if(typeof html2canvas === "undefined" || !window.jspdf){
+      showAlert("PDF tools are still loading â€” please wait a few seconds and try again.");
+      return;
+    }
+    const { jsPDF } = window.jspdf;
+    let pdf = null;
+    const pageW = 595.28, pageH = 841.89; // A4 portrait, matches individual report layout
+
+    for(let i=0; i<rows.length; i++){
+      if(btnEl) btnEl.innerHTML = `Preparing ${i+1} of ${rows.length}â€¦`;
+      const cardHTML = buildStudentReportCardHTML(rows[i].studentId, {withButtons:false, elementId:"batchPrintable"});
+      if(!cardHTML) continue;
+      stage.innerHTML = cardHTML;
+      await new Promise(r => setTimeout(r, 30)); // let the chart's SVG lay out
+      const node = stage.querySelector("#batchPrintable");
+      const canvas = await html2canvas(node, {scale:2, backgroundColor:"#ffffff", useCORS:true});
+      const imgW = pageW;
+      const imgH = (canvas.height * imgW) / canvas.width;
+      const imgData = canvas.toDataURL("image/jpeg", 0.92);
+      if(!pdf) pdf = new jsPDF({orientation:"portrait", unit:"pt", format:"a4"});
+      else pdf.addPage("a4", "portrait");
+      if(imgH <= pageH){
+        pdf.addImage(imgData, "JPEG", 0, 0, imgW, imgH);
+      } else {
+        // rare: a very long report spills onto a second page for that learner
+        let heightLeft = imgH, position = 0;
+        pdf.addImage(imgData, "JPEG", 0, position, imgW, imgH);
+        heightLeft -= pageH;
+        while(heightLeft > 0){
+          position = heightLeft - imgH;
+          pdf.addPage("a4", "portrait");
+          pdf.addImage(imgData, "JPEG", 0, position, imgW, imgH);
+          heightLeft -= pageH;
+        }
+      }
+    }
+
+    const blob = pdf.output("blob");
+    await saveFile(`${state.className.replace(/[^A-Za-z0-9]+/g,"_")}_All_Learner_Reports.pdf`, blob);
+  }catch(e){
+    showAlert("Couldn't create the combined report. Please try again.");
+  } finally {
+    document.body.removeChild(stage);
+    if(btnEl){ btnEl.disabled = false; btnEl.innerHTML = originalHTML; }
+  }
+}
+
+function openAverageReport(){
+  if(!ui.compareA || !ui.compareB){ showAlert("Pick two assessments to compare first."); return; }
+  const asmA = state.assessments.find(a=>a.id===ui.compareA);
+  const asmB = state.assessments.find(a=>a.id===ui.compareB);
+  if(!asmA || !asmB){ showAlert("Pick two assessments to compare first."); return; }
+  runDedupeSafetyNets();
+
+  const rows = computeAveragedRows(state.students, asmA, asmB);
+  const sortedRows = [...rows].sort((a,b)=>a.position-b.position);
+  const avgs = classAverages(rows);
+  // Subjects ordered best-performed to worst, by class mean %, so the
+  // Subject Analysis table and the mark-list columns both read strongest
+  // to weakest left-to-right instead of the fixed curriculum order.
+  const rankedSubjects = [...SUBJECTS].sort((a,b) => (avgs[b]??-1) - (avgs[a]??-1));
+
+  const mssRows = rankedSubjects.map(subj => {
+    const vals = rows.map(r => (r.perSubject.find(p=>p.subject===subj)||{}).pct).filter(v=>v!==null&&v!==undefined&&v!=="");
+    const mean = avgs[subj];
+    const meanPts = pointsForPct(mean);
+    const band = pointsToBand(meanPts);
+    const high = vals.length ? Math.max(...vals.map(Number)) : null;
+    const low = vals.length ? Math.min(...vals.map(Number)) : null;
+    return `<tr>
+      <td>${subj}</td>
+      <td style="text-align:center;">${mean.toFixed(1)}</td>
+      <td style="text-align:center;">${meanPts}</td>
+      <td style="text-align:center;">${band}</td>
+      <td style="text-align:center;">${high===null?"â€”":high}</td>
+      <td style="text-align:center;">${low===null?"â€”":low}</td>
+    </tr>`;
+  }).join("");
+
+  const overallMean = rows.length ? (rows.reduce((a,r)=>a+(r.totalMarks||0),0) / rows.length / SUBJECTS.length) : 0;
+
+  const classRows = sortedRows.map((r,idx) => {
+    const subjCells = rankedSubjects.map(subj => {
+      const p = r.perSubject.find(x=>x.subject===subj);
+      const pct = p && p.pct!==null && p.pct!==undefined ? p.pct : "â€”";
+      const pts = p && p.points!==null && p.points!==undefined ? p.points : "â€”";
+      return `<td style="text-align:center;border-left:2px solid var(--navy);">${pct}</td><td style="text-align:center;border-left:1px solid var(--navy-line);">${pts}</td>`;
+    }).join("");
+    return `<tr style="border-bottom:1px solid var(--navy-line);">
+      <td style="text-align:center;">${idx+1}</td>
+      <td style="border-left:2px solid var(--navy);">${esc(r.name)}</td>
+      ${subjCells}
+      <td style="text-align:center;font-weight:700;border-left:2px solid var(--navy);">${r.totalMarks}</td>
+      <td style="text-align:center;font-weight:700;">${r.totalPoints}/${SUBJECTS.length*8}</td>
+      <td style="text-align:center;">${r.avgPoints!==null?r.avgPoints.toFixed(2):"â€”"}</td>
+      <td style="text-align:center;font-weight:700;">${r.position}</td>
+    </tr>`;
+  }).join("");
+
+  const subjHeaderCells = rankedSubjects.map(s=>`<th colspan="2" style="text-align:center;border-left:2px solid var(--navy);">${s.replace(" & ","&")}</th>`).join("");
+  const subjSubHeaderCells = rankedSubjects.map(()=>`<th style="text-align:center;font-size:9px;border-left:2px solid var(--navy);">%</th><th style="text-align:center;font-size:9px;border-left:1px solid var(--navy-line);">P</th>`).join("");
+  const logoHTML = state.schoolLogo ? `<div style="text-align:center;margin-bottom:8px;"><img src="${state.schoolLogo}" style="width:56px;height:56px;border-radius:50%;object-fit:cover;border:1px solid var(--navy-line);"></div>` : "";
+
+  document.getElementById("reportRoot").innerHTML = `
+    <div class="modal-overlay" style="align-items:flex-start;overflow-y:auto;padding:12px 6px;">
+      <div class="report-card wide" id="printable" style="max-width:100%;">
+        <div class="report-close-row no-print">
+          <button class="btn sm outline" onclick="downloadReportPDF('${state.className.replace(/[^A-Za-z0-9]+/g,"_")}_Average_Report', this)">${icon("printer",14)} Download PDF</button>
+          <button class="btn sm outline" onclick="downloadReportWord('${state.className.replace(/[^A-Za-z0-9]+/g,"_")}_Average_Report', this)">${icon("download",14)} Download Word</button>
+          <button style="background:none;border:none;cursor:pointer;" onclick="closeReport()">${icon("x",18)}</button>
+        </div>
+
+        <div class="print-page-break">
+          ${logoHTML}
+          <h2 style="text-align:center;font-size:18px;margin:0;">BOSIANGO COMPREHENSIVE SCHOOL</h2>
+          <p style="text-align:center;font-size:11px;color:var(--navy-soft);margin:4px 0 4px;">AVERAGE PERFORMANCE REPORT â€” SUBJECT ANALYSIS</p>
+          <p style="text-align:center;font-size:12px;margin:0 0 16px;"><b>${esc(state.className)}</b> â€” Average of ${esc(asmA.name)} &amp; ${esc(asmB.name)} Â· ${rows.length} learners Â· Class Mean ${overallMean.toFixed(1)}%</p>
+
+          <p style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--navy-soft);margin-bottom:6px;">Mean Subject Scores (MSS)</p>
+          <table style="font-size:11px;">
+            <thead><tr><th>SUBJECT</th><th style="text-align:center;">MEAN (%)</th><th style="text-align:center;">MEAN PTS</th><th style="text-align:center;">GRADE</th><th style="text-align:center;">HIGH</th><th style="text-align:center;">LOW</th></tr></thead>
+            <tbody>${mssRows}</tbody>
+          </table>
+        </div>
+
+        <div style="font-size:11px;color:var(--navy-soft);text-align:center;margin:20px 0 14px;">â€” AVERAGE MARK LIST â€”</div>
+        <p style="text-align:center;font-size:11px;font-weight:700;margin:0 0 10px;">BOSIANGO COMPREHENSIVE SCHOOL â€” ${esc(state.className)} Â· Average of ${esc(asmA.name)} &amp; ${esc(asmB.name)}</p>
+        <div style="overflow-x:auto;">
+        <table style="font-size:9px;min-width:1000px;">
+          <thead>
+            <tr>
+              <th rowspan="2" style="text-align:center;">NO.</th>
+              <th rowspan="2" style="border-left:2px solid var(--navy);">NAME</th>
+              ${subjHeaderCells}
+              <th rowspan="2" style="text-align:center;">TOTAL<br>MARKS</th>
+              <th rowspan="2" style="text-align:center;">TOTAL<br>POINTS <span style="font-weight:400;font-size:8px;">/${SUBJECTS.length*8}</span></th>
+              <th rowspan="2" style="text-align:center;">POINT<br>AVE</th>
+              <th rowspan="2" style="text-align:center;">POS</th>
+            </tr>
+            <tr>${subjSubHeaderCells}</tr>
+          </thead>
+          <tbody>${classRows}</tbody>
+        </table>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:12px;padding-top:16px;margin-top:20px;border-top:1px solid var(--navy-line);">
+          <div><b style="color:var(--navy-soft);">CLASS TEACHER: </b>${esc(state.classTeacher||"â€”")}</div>
+          <div><b style="color:var(--navy-soft);">SIGN: </b>________________</div>
+        </div>
+      </div>
+    </div>`;
+}
+function openClassReport(){
+  const changed = runDedupeSafetyNets();
+  if(changed){ scheduleSave(); }
+  const asm = state.assessments.find(a=>a.id===ui.selectedAssessmentId) || state.assessments[0];
+  if(!asm){ showAlert("No assessment selected."); return; }
+  const rows = computeRows(state.students, asm);
+  const avgs = classAverages(rows);
+  // Subjects ordered best-performed to worst, by class mean %, so the
+  // Subject Analysis table and the mark-list columns both read strongest
+  // to weakest left-to-right instead of the fixed curriculum order.
+  const rankedSubjects = [...SUBJECTS].sort((a,b) => (avgs[b]??-1) - (avgs[a]??-1));
+
+  const mssRows = rankedSubjects.map(subj => {
+    const vals = rows.map(r => (r.perSubject.find(p=>p.subject===subj)||{}).pct).filter(v=>v!==null&&v!==undefined&&v!=="");
+    const mean = avgs[subj];
+    const meanPts = pointsForPct(mean);
+    const band = pointsToBand(meanPts);
+    const high = vals.length ? Math.max(...vals.map(Number)) : null;
+    const low = vals.length ? Math.min(...vals.map(Number)) : null;
+    return `<tr>
+      <td>${subj}</td>
+      <td style="text-align:center;">${mean.toFixed(1)}</td>
+      <td style="text-align:center;">${meanPts}</td>
+      <td style="text-align:center;">${band}</td>
+      <td style="text-align:center;">${high===null?"â€”":high}</td>
+      <td style="text-align:center;">${low===null?"â€”":low}</td>
+    </tr>`;
+  }).join("");
+
+  const overallMean = rows.length ? (rows.reduce((a,r)=>a+(r.totalMarks||0),0) / rows.length / SUBJECTS.length) : 0;
+
+  // Traditional mark-list layout: NO follows the original roster order (like
+  // your paper mark list), POS at the far right shows the computed rank.
+  const sortedClassRows = [...rows].sort((a,b)=>a.position-b.position);
+  const classRows = sortedClassRows.map((r,idx) => {
+    const subjCells = rankedSubjects.map(subj => {
+      const p = r.perSubject.find(x=>x.subject===subj);
+      const pct = p && p.pct!==null && p.pct!==undefined ? p.pct : "â€”";
+      const pts = p && p.points!==null && p.points!==undefined ? p.points : "â€”";
+      return `<td style="text-align:center;border-left:2px solid var(--navy);">${pct}</td><td style="text-align:center;border-left:1px solid var(--navy-line);">${pts}</td>`;
+    }).join("");
+    return `<tr style="border-bottom:1px solid var(--navy-line);">
+      <td style="text-align:center;">${idx+1}</td>
+      <td style="border-left:2px solid var(--navy);">${esc(r.name)}</td>
+      ${subjCells}
+      <td style="text-align:center;font-weight:700;border-left:2px solid var(--navy);">${r.totalMarks}</td>
+      <td style="text-align:center;font-weight:700;">${r.totalPoints}/${SUBJECTS.length*8}</td>
+      <td style="text-align:center;">${r.avgPoints!==null?r.avgPoints.toFixed(2):"â€”"}</td>
+      <td style="text-align:center;font-weight:700;">${r.position}</td>
+    </tr>`;
+  }).join("");
+
+  const subjHeaderCells = rankedSubjects.map(s=>`<th colspan="2" style="text-align:center;border-left:2px solid var(--navy);">${s.replace(" & ","&")}</th>`).join("");
+  const subjSubHeaderCells = rankedSubjects.map(()=>`<th style="text-align:center;font-size:9px;border-left:2px solid var(--navy);">%</th><th style="text-align:center;font-size:9px;border-left:1px solid var(--navy-line);">P</th>`).join("");
+
+  // Official-use summary rows at the foot of the mark list: TOTAL (sum
+  // of every learner's mark/points per subject) and MSS (Mean Subject
+  // Score â€” the same per-subject mean shown above, restated here for
+  // quick reference/verification directly under the list itself).
+  const grandTotalMarks = rows.reduce((a,r)=>a+(r.totalMarks||0),0);
+  const grandTotalPoints = rows.reduce((a,r)=>a+(r.totalPoints||0),0);
+  const meanTotalMarks = rows.length ? grandTotalMarks/rows.length : 0;
+  const meanTotalPoints = rows.length ? grandTotalPoints/rows.length : 0;
+  const meanAvgPoints = rows.length ? rows.reduce((a,r)=>a+(r.avgPoints||0),0)/rows.length : 0;
+
+  const totalRowCells = rankedSubjects.map(subj => {
+    const vals = rows.map(r => (r.perSubject.find(p=>p.subject===subj)||{}).pct).filter(v=>v!==null&&v!==undefined&&v!=="");
+    const ptVals = rows.map(r => (r.perSubject.find(p=>p.subject===subj)||{}).points).filter(v=>v!==null&&v!==undefined&&v!=="");
+    const sumPct = vals.reduce((a,b)=>a+Number(b),0);
+    const sumPts = ptVals.reduce((a,b)=>a+Number(b),0);
+    return `<td style="text-align:center;border-left:2px solid var(--navy);">${sumPct}</td><td style="text-align:center;border-left:1px solid var(--navy-line);">${sumPts}</td>`;
+  }).join("");
+  const mssRowCells = rankedSubjects.map(subj => {
+    const mean = avgs[subj];
+    const meanPts = pointsForPct(mean);
+    return `<td style="text-align:center;border-left:2px solid var(--navy);">${mean.toFixed(1)}</td><td style="text-align:center;border-left:1px solid var(--navy-line);">${meanPts}</td>`;
+  }).join("");
+  const summaryRows = `
+    <tr style="border-top:2px solid var(--navy);font-weight:700;">
+      <td colspan="2">TOTAL</td>
+      ${totalRowCells}
+      <td style="text-align:center;border-left:2px solid var(--navy);">${grandTotalMarks}</td>
+      <td style="text-align:center;">${grandTotalPoints}</td>
+      <td style="text-align:center;">â€”</td>
+      <td style="text-align:center;">â€”</td>
+    </tr>
+    <tr style="border-top:1px solid var(--navy);font-weight:700;">
+      <td colspan="2">MSS</td>
+      ${mssRowCells}
+      <td style="text-align:center;border-left:2px solid var(--navy);">${meanTotalMarks.toFixed(1)}</td>
+      <td style="text-align:center;">${meanTotalPoints.toFixed(1)}</td>
+      <td style="text-align:center;">${meanAvgPoints.toFixed(2)}</td>
+      <td style="text-align:center;">â€”</td>
+    </tr>`;
+
+  const logoHTML = state.schoolLogo ? `<div style="text-align:center;margin-bottom:8px;"><img src="${state.schoolLogo}" style="width:56px;height:56px;border-radius:50%;object-fit:cover;border:1px solid var(--navy-line);"></div>` : "";
+
+  document.getElementById("reportRoot").innerHTML = `
+    <div class="modal-overlay" style="align-items:flex-start;overflow-y:auto;padding:12px 6px;">
+      <div class="report-card wide" id="printable" style="max-width:100%;">
+        <div class="report-close-row no-print">
+          <button class="btn sm outline" onclick="downloadReportPDF('${state.className.replace(/[^A-Za-z0-9]+/g,"_")}_Class_Report', this)">${icon("printer",14)} Download PDF</button>
+          <button class="btn sm outline" onclick="downloadReportWord('${state.className.replace(/[^A-Za-z0-9]+/g,"_")}_Class_Report', this)">${icon("download",14)} Download Word</button>
+          <button style="background:none;border:none;cursor:pointer;" onclick="closeReport()">${icon("x",18)}</button>
+        </div>
+
+        <div class="print-page-break">
+          ${logoHTML}
+          <h2 style="text-align:center;font-size:18px;margin:0;">BOSIANGO COMPREHENSIVE SCHOOL</h2>
+          <p style="text-align:center;font-size:11px;color:var(--navy-soft);margin:4px 0 4px;">CLASS PERFORMANCE REPORT â€” SUBJECT ANALYSIS</p>
+          <p style="text-align:center;font-size:12px;margin:0 0 16px;"><b>${esc(state.className)}</b> â€” ${esc(asm.name)} Â· ${rows.length} learners Â· Class Mean ${overallMean.toFixed(1)}%</p>
+
+          <p style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--navy-soft);margin-bottom:6px;">Mean Subject Scores (MSS)</p>
+          <table style="font-size:11px;">
+            <thead><tr><th>SUBJECT</th><th style="text-align:center;">MEAN (%)</th><th style="text-align:center;">MEAN PTS</th><th style="text-align:center;">GRADE</th><th style="text-align:center;">HIGH</th><th style="text-align:center;">LOW</th></tr></thead>
+            <tbody>${mssRows}</tbody>
+          </table>
+        </div>
+
+        <div style="font-size:11px;color:var(--navy-soft);text-align:center;margin:20px 0 14px;">â€” ${esc(state.className.toUpperCase())} MARK LIST â€”</div>
+        <p style="text-align:center;font-size:11px;font-weight:700;margin:0 0 10px;">BOSIANGO COMPREHENSIVE SCHOOL â€” ${esc(state.className)} MARK LIST Â· ${esc(asm.name)}</p>
+        <div style="overflow-x:auto;">
+        <table style="font-size:9px;min-width:1000px;">
+          <thead>
+            <tr>
+              <th rowspan="2" style="text-align:center;">NO.</th>
+              <th rowspan="2" style="border-left:2px solid var(--navy);">NAME</th>
+              ${subjHeaderCells}
+              <th rowspan="2" style="text-align:center;">TOTAL<br>MARKS</th>
+              <th rowspan="2" style="text-align:center;">TOTAL<br>POINTS <span style="font-weight:400;font-size:8px;">/${SUBJECTS.length*8}</span></th>
+              <th rowspan="2" style="text-align:center;">POINT<br>AVE</th>
+              <th rowspan="2" style="text-align:center;">POS</th>
+            </tr>
+            <tr>${subjSubHeaderCells}</tr>
+          </thead>
+          <tbody>${classRows}${summaryRows}</tbody>
+        </table>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;font-size:12px;padding-top:16px;margin-top:20px;border-top:1px solid var(--navy-line);align-items:end;">
+          <div><b style="color:var(--navy-soft);">CLASS TEACHER: </b>${esc(state.classTeacher||"â€”")}</div>
+          <div><b style="color:var(--navy-soft);">SIGN: </b>________________</div>
+          <div style="text-align:right;">
+            <div style="border:1px dashed var(--navy-line);border-radius:6px;width:110px;height:70px;margin-left:auto;display:flex;align-items:center;justify-content:center;color:var(--navy-soft);font-size:9px;text-transform:uppercase;letter-spacing:0.5px;">School Stamp</div>
+          </div>
+        </div>
+      </div>
+    </div>`;
+}
+
+/* =========================================================
+   MAIN RENDER / TAB NAV
+========================================================= */
+const TABS = [
+  {id:"roster", label:"Roster", icon:"users"},
+  {id:"entry", label:"Enter Marks", icon:"pen"},
+  {id:"assessment", label:"Assessment", icon:"bar"},
+  {id:"terms", label:"Terms", icon:"calendar"},
+  {id:"compare", label:"Compare", icon:"arrows"}
+];
+function renderNav(){
+  document.getElementById("tabNav").innerHTML = TABS.map(t =>
+    `<button class="${ui.activeTab===t.id?'active':''}" onclick="ui.activeTab='${t.id}'; render();">${icon(t.icon,15)} ${t.label}</button>`
+  ).join("");
+}
+function render(){
+  renderNav();
+  document.getElementById("headerSubtitle").textContent = "BOSIANGO 2026 Assessment â€” " + state.className;
+  document.getElementById("gradeSelectorRow").innerHTML = `
+    <label style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--navy-soft);margin-right:8px;">Grade</label>
+    <select onchange="switchGrade(this.value)" style="font-weight:700;">
+      ${GRADES.map(g => `<option value="${g}" ${g===state.currentGrade?"selected":""}>${g}</option>`).join("")}
+    </select>`;
+  let html = "";
+  if(ui.activeTab==="roster") html = renderRoster();
+  else if(ui.activeTab==="entry") html = renderEntry();
+  else if(ui.activeTab==="assessment") html = renderAssessment();
+  else if(ui.activeTab==="terms") html = renderTerms();
+  else if(ui.activeTab==="compare") html = renderCompare();
+  document.getElementById("mainContent").innerHTML = html;
+
+  const logoImg = document.getElementById("logoImg");
+  const logoPh = document.getElementById("logoPlaceholderIcon");
+  if(state.schoolLogo){ logoImg.src = state.schoolLogo; logoImg.style.display="block"; logoPh.style.display="none"; }
+  else { logoImg.style.display="none"; logoPh.style.display="block"; }
+}
+function persistAndRender(){ scheduleSave(); render(); }
+// Updates just the "X of Y entered Â· class average Z%" line on the Entry
+// tab without touching the input rows themselves â€” used so committing
+// one mark doesn't force a full-page rebuild (recompute ranks, redraw
+// both charts, rebuild every row) each time, which is what made mark
+// entry feel slow on bigger classes.
+// Lets a teacher enter marks for a whole learning area without lifting
+// a finger to tap each row: pressing Enter/Next on one mark jumps
+// straight into the next student's field, already selected and ready
+// to type over.
+function focusNextEntryInput(currentIdx){
+  const next = document.querySelector(`input[data-entry-idx="${currentIdx+1}"]`);
+  if(next){ next.focus(); if(next.select) next.select(); }
+}
+function refreshEntrySummary(){
+  if(ui.activeTab!=="entry") return false;
+  const asm = state.assessments.find(a=>a.id===ui.selectedAssessmentId);
+  const el = document.getElementById("entrySummaryLine");
+  if(!asm || !el) return false;
+  let filled=0, count=0, sum=0;
+  state.students.forEach(stu => {
+    const val = (asm.scores[stu.id]||{})[ui.mySubject];
+    if(val!==undefined && val!==null && val!==""){ filled++; sum+=Number(val); count++; }
+  });
+  const avg = count ? (sum/count).toFixed(1) : null;
+  el.textContent = `${filled} of ${state.students.length} entered${avg!==null ? " Â· class average "+avg+"%" : ""}`;
+  return true;
+}
+
+/* =========================================================
+   FILE INPUT HANDLERS
+========================================================= */
+document.getElementById("csvInput").addEventListener("change", e => {
+  const file = e.target.files[0];
+  if(file) handleCSVUpload(file);
+  e.target.value = "";
+});
+document.getElementById("photoInput").addEventListener("change", e => {
+  const file = e.target.files[0];
+  const studentId = window.__photoTarget;
+  if(!file || !studentId){ e.target.value=""; return; }
+  const reader = new FileReader();
+  reader.onload = () => {
+    const s = state.students.find(s=>s.id===studentId);
+    if(s){ s.photo = reader.result; persistAndRender(); }
+  };
+  reader.readAsDataURL(file);
+  e.target.value = "";
+});
+document.getElementById("logoBadge").addEventListener("click", () => document.getElementById("logoInput").click());
+document.getElementById("logoInput").addEventListener("change", e => {
+  const file = e.target.files[0];
+  if(!file){ e.target.value=""; return; }
+  const reader = new FileReader();
+  reader.onload = () => { state.schoolLogo = reader.result; persistAndRender(); };
+  reader.readAsDataURL(file);
+  e.target.value = "";
+});
+document.getElementById("importInput").addEventListener("change", e => {
+  const file = e.target.files[0];
+  if(file) importData(file);
+  e.target.value = "";
+});
+
+/* =========================================================
+   INIT
+========================================================= */
+/* =========================================================
+   APP LOCK â€” a soft screen-lock stored only on this device.
+   Keeps casual browsers (students, parents) out; not strong
+   security, since the sync connection details live in this
+   same file either way.
+========================================================= */
+function getLockPassword(){
+  try{ return localStorage.getItem(LOCK_KEY) || ""; }catch(e){ return ""; }
+}
+function setLockPassword(pw){
+  try{ localStorage.setItem(LOCK_KEY, pw); }catch(e){}
+}
+function clearLockPassword(){
+  try{ localStorage.removeItem(LOCK_KEY); }catch(e){}
+}
+function showLockScreen(onUnlock){
+  document.getElementById("lockRoot").innerHTML = `
+    <div class="modal-overlay" style="background:#fff;">
+      <div class="modal-box" style="text-align:center;">
+        <div style="display:flex;justify-content:center;margin-bottom:14px;">
+          <div style="width:48px;height:48px;border-radius:50%;border:2px solid var(--navy);display:flex;align-items:center;justify-content:center;color:var(--navy);">
+            ${icon("alert",22)}
+          </div>
+        </div>
+        <p style="font-weight:700;color:var(--navy);margin:0 0 4px;">BOSIANGO COMPREHENSIVE SCHOOL</p>
+        <p class="small-note" style="margin-bottom:16px;">Enter password to open the tracker</p>
+        <input type="password" id="lockPwInput" placeholder="Password" style="width:100%;text-align:center;margin-bottom:10px;">
+        <p id="lockError" style="color:var(--be);font-size:12px;min-height:16px;margin:0 0 10px;"></p>
+        <button class="btn" style="width:100%;" onclick="attemptUnlock()">Unlock</button>
+      </div>
+    </div>`;
+  window.__onUnlock = onUnlock;
+  setTimeout(() => {
+    const f = document.getElementById("lockPwInput");
+    if(f){ f.focus(); f.addEventListener("keydown", e => { if(e.key==="Enter") attemptUnlock(); }); }
+  }, 0);
+}
+function attemptUnlock(){
+  const entered = document.getElementById("lockPwInput").value;
+  if(entered === getLockPassword()){
+    document.getElementById("lockRoot").innerHTML = "";
+    if(window.__onUnlock) window.__onUnlock();
+  } else {
+    document.getElementById("lockError").textContent = "Incorrect password. Try again.";
+    document.getElementById("lockPwInput").value = "";
+    document.getElementById("lockPwInput").focus();
+  }
+}
+function setAppLock(){
+  showInput("Set App Lock Password", "New password", (pw) => {
+    if(!pw){ showAlert("Password can't be empty."); return; }
+    setLockPassword(pw);
+    render();
+    showAlert("App lock set. You'll need this password next time you open the tracker on this device.");
+  });
+}
+function removeAppLock(){
+  const current = getLockPassword();
+  if(!current){ showAlert("No app lock is currently set."); return; }
+  showInput("Remove App Lock", "Enter current password to confirm", (pw) => {
+    if(pw !== current){ showAlert("Incorrect password â€” app lock not removed."); return; }
+    clearLockPassword();
+    render();
+    showAlert("App lock removed from this device.");
+  });
+}
+
+async function startApp(){
+  const saved = loadState();
+  if(saved && saved.grades && Object.keys(saved.grades).length){
+    state = Object.assign({currentGrade:"Grade 6", grades:{}, schoolLogo:null, students:[], assessments:[], className:"Grade 6", subjectTeachers:{}}, saved);
+    SUBJECTS = subjectsForGrade(state.currentGrade);
+    if(!state.grades[state.currentGrade]) state.grades[state.currentGrade] = defaultGradeData(state.currentGrade);
+    syncActiveGradeFromStore();
+    dedupeStudentsByName();
+    saveActiveGradeToStore();
+    ui.selectedAssessmentId = state.assessments.length ? state.assessments[state.assessments.length-1].id : null;
+    render();
+    initSync().then(() => { if(backfillMissingRosters()) render(); });
+  } else {
+    SUBJECTS = subjectsForGrade(state.currentGrade);
+    await bootstrapFromCloudOrSeed();
+    dedupeStudentsByName();
+    saveActiveGradeToStore();
+    ui.selectedAssessmentId = state.assessments.length ? state.assessments[state.assessments.length-1].id : null;
+    backfillMissingRosters();
+    render();
+  }
+}
+if(getLockPassword()){
+  showLockScreen(startApp);
+} else {
+  startApp();
+}
+</script>
+</body>
+</html>
