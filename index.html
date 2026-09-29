@@ -41,7 +41,7 @@
   th,td{padding:7px 8px;text-align:left;border-top:1px solid var(--navy-line);}
   th{border-top:none;}
   tr.zebra{background:var(--navy-faint);}
-  /* Reports/exports stay light â€” navy text and thin borders on white,
+  /* Reports/exports stay light &#8212; navy text and thin borders on white,
      no dark fills, so they photocopy/print cleanly for official use. */
   #printable thead tr{background:#fff;color:var(--navy);}
   #printable th{border-bottom:2px solid var(--navy);font-weight:700;}
@@ -112,7 +112,7 @@
       </button>
       <div>
         <h1>BOSIANGO COMPREHENSIVE SCHOOL</h1>
-        <p class="subtitle" id="headerSubtitle">BOSIANGO 2026 Assessment â€” Grade 6</p>
+        <p class="subtitle" id="headerSubtitle">BOSIANGO 2026 Assessment &#8212; Grade 6</p>
       </div>
     </div>
     <div class="save-status" id="saveStatus"></div>
@@ -174,7 +174,7 @@ const SUBJECT_COMMENTS = {
   "-":"No score recorded."
 };
 const SUBJECT_COMMENTS_KISWAHILI = {
-  EE:"Anazidi matarajio â€” ufahamu bora wa somo.",
+  EE:"Anazidi matarajio \u2014 ufahamu bora wa somo.",
   ME:"Kazi nzuri na ya kuridhisha.",
   AE:"Anahitaji mazoezi zaidi.",
   BE:"Anahitaji msaada wa karibu.",
@@ -184,7 +184,7 @@ const STORE_KEY = "bosiango-cbc-tracker-v1";
 const LOCK_KEY = "bosiango-app-lock-pw"; // stored only on this device, never synced
 
 /* =========================================================
-   LIVE SYNC â€” via the Claude "db" runtime capability, so this
+   LIVE SYNC \u2014 via the Claude "db" runtime capability, so this
    artifact stays in sync across every device/browser where
    Caroline opens the same published link (Chrome on desktop
    included), instead of the old per-device-only localStorage.
@@ -197,6 +197,30 @@ let dbUnsub = null;
 let syncApplyingRemote = false; // guards against write-loop while applying a remote update
 let cloudWriteChain = Promise.resolve();
 let cloudWriteQueued = false;
+// Marks typed while unsynced/offline are remembered individually, so when
+// we reconnect and merge in what other teachers saved, OUR unsynced marks
+// win for the boxes we touched and THEIR marks win everywhere else.
+const PENDING_EDITS_KEY = "bosiango-pending-edits";
+let pendingEdits = {};
+let pendingSeq = 0;
+try{
+  pendingEdits = JSON.parse(localStorage.getItem(PENDING_EDITS_KEY) || "{}") || {};
+  Object.values(pendingEdits).forEach(e => { if(e && e.v > pendingSeq) pendingSeq = e.v; });
+}catch(e){ pendingEdits = {}; }
+function savePendingEdits(){ try{ localStorage.setItem(PENDING_EDITS_KEY, JSON.stringify(pendingEdits)); }catch(e){} }
+function recordPendingEdit(gradeName, asmId, stuId, subject, val){
+  pendingSeq++;
+  pendingEdits[[gradeName,asmId,stuId,subject].join("|")] = {g:gradeName, a:asmId, s:stuId, sub:subject, val:val, v:pendingSeq};
+  savePendingEdits();
+}
+function reapplyPendingEdits(){
+  Object.values(pendingEdits).forEach(e => {
+    const g = state.grades[e.g]; if(!g) return;
+    const asm = g.assessments.find(x => x.id === e.a); if(!asm) return;
+    if(!asm.scores[e.s]) asm.scores[e.s] = {};
+    if(e.val === null) delete asm.scores[e.s][e.sub]; else asm.scores[e.s][e.sub] = e.val;
+  });
+}
 let cloudDirty = false; // true = local marks not yet confirmed saved to the shared copy
 try{ cloudDirty = localStorage.getItem(PENDING_SYNC_KEY) === "1"; }catch(e){}
 function markCloudDirty(){
@@ -239,7 +263,7 @@ let state = {
   currentGrade: "Grade 6",
   grades: {},
   schoolLogo: null,
-  // "working view" â€” always mirrors grades[currentGrade]; existing code
+  // "working view" \u2014 always mirrors grades[currentGrade]; existing code
   // throughout the app reads/writes these directly, unchanged.
   students: [],
   assessments: [],
@@ -302,7 +326,7 @@ function buildSeedData(){
 }
 
 /* =========================================================
-   MULTI-GRADE STORE â€” the app's business logic works against
+   MULTI-GRADE STORE \u2014 the app's business logic works against
    the top-level state.students/assessments/etc "working view".
    These helpers move that view in and out of state.grades[X]
    whenever the active grade changes.
@@ -410,7 +434,7 @@ function classAverages(rows){
 // Builds a synthetic "assessment" whose per-subject score for each student
 // is the average of the same subject across two real assessments, then
 // ranks it exactly like any other assessment (same totals/points/grade
-// logic as computeRows) â€” so "average performance" gets its own position
+// logic as computeRows) \u2014 so "average performance" gets its own position
 // 1..last, not just an average of two separate totals.
 function computeAveragedRows(students, asmA, asmB){
   const avgScores = {};
@@ -460,16 +484,16 @@ function scheduleSave(){
 }
 function setSaveStatus(s){
   const el = document.getElementById("saveStatus");
-  if(s==="saving") el.innerHTML = icon("save",12)+" Savingâ€¦";
+  if(s==="saving") el.innerHTML = icon("save",12)+" Saving\u2026";
   else if(s==="saved") el.innerHTML = '<span style="color:#1B7A4A;display:flex;align-items:center;gap:4px;">'+icon("check",12)+' Saved</span>';
   else if(s==="error") el.innerHTML = '<span style="color:#A3402F;display:flex;align-items:center;gap:4px;">'+icon("alert",12)+' Save failed</span>';
   else el.innerHTML = "";
 }
 
 /* =========================================================
-   LIVE SYNC â€” real cross-device sync via your own Firebase
+   LIVE SYNC \u2014 real cross-device sync via your own Firebase
    project (Bosiango Exam Analyzer), not Claude's system. This
-   is the independent test copy â€” same sync logic as the main
+   is the independent test copy \u2014 same sync logic as the main
    app, just pointed at real, separately-owned infrastructure.
 ========================================================= */
 const FIREBASE_CONFIG = {
@@ -483,11 +507,11 @@ const FIREBASE_CONFIG = {
 function setSyncStatus(s){
   const el = document.getElementById("syncStatus");
   if(!el) return;
-  if(s==="connecting") el.innerHTML = '<span style="color:var(--navy-soft);">Connecting to syncâ€¦</span>';
-  else if(s==="connected") el.innerHTML = '<span style="color:#1B7A4A;">â— Live sync on</span>';
-  else if(s==="pending") el.innerHTML = '<span style="color:#B8860B;">â— Saved on this device â€” will sync once online</span>';
-  else if(s==="error") el.innerHTML = '<span style="color:#A3402F;">â— Sync error â€” saved on this device only</span>';
-  else if(s==="offline") el.innerHTML = '<span style="color:var(--navy-soft);">â— Sync unavailable â€” saved on this device only</span>';
+  if(s==="connecting") el.innerHTML = '<span style="color:var(--navy-soft);">Connecting to sync\u2026</span>';
+  else if(s==="connected") el.innerHTML = '<span style="color:#1B7A4A;">\u25cf Live sync on</span>';
+  else if(s==="pending") el.innerHTML = '<span style="color:#B8860B;">\u25cf Saved on this device \u2014 will sync once online</span>';
+  else if(s==="error") el.innerHTML = '<span style="color:#A3402F;">\u25cf Sync error \u2014 saved on this device only</span>';
+  else if(s==="offline") el.innerHTML = '<span style="color:var(--navy-soft);">\u25cf Sync unavailable \u2014 saved on this device only</span>';
   else el.innerHTML = "";
 }
 function firebaseReady(){ return SYNC_ENABLED && !!dbNS; }
@@ -495,7 +519,7 @@ async function ensureDb(){
   if(dbNS) return dbNS;
   if(typeof firebase === "undefined") return null;
   try{
-    // Never let a dead/absent connection block the app from opening â€”
+    // Never let a dead/absent connection block the app from opening \u2014
     // if we can't reach the sync backend within a few seconds, give up
     // for now and let the app run fully offline; the retry loop further
     // down will keep trying in the background.
@@ -509,7 +533,11 @@ async function ensureDb(){
   }catch(e){ dbNS = null; }
   return dbNS;
 }
-function canPushCloud(){ return SYNC_ENABLED && !!dbNS && !syncApplyingRemote; }
+// syncPulled = we have successfully read (and merged in) the shared copy at
+// least once this session. Until then we must NOT push, or a phone that
+// opened offline could overwrite marks other teachers saved meanwhile.
+let syncPulled = false;
+function canPushCloud(){ return SYNC_ENABLED && !!dbNS && syncPulled && !syncApplyingRemote; }
 let downloadsNS = null;
 async function ensureDownloads(){
   if(downloadsNS) return downloadsNS;
@@ -554,10 +582,10 @@ async function saveFile(filename, data){
 // downloads capability (window.print()/Save-as-PDF isn't reliable inside
 // a published, embedded page).
 // Exports the report as a Word-compatible document (landscape, A4) so
-// orientation is baked into the file itself â€” Word/printers respect it
+// orientation is baked into the file itself \u2014 Word/printers respect it
 // directly, sidestepping any print-dialog default that forces portrait.
 // Exports the report as a genuine .docx (real OOXML/ZIP, built with
-// JSZip) â€” the platform only allows saving .docx, not the classic
+// JSZip) \u2014 the platform only allows saving .docx, not the classic
 // HTML-as-.doc trick, so this walks the rendered report DOM into real
 // Word XML and sets the section to landscape A4 directly in the file.
 function escXml(s){
@@ -578,7 +606,7 @@ function docxTableXml(table){
   });
 
   // Without an explicit column grid, Word/LibreOffice auto-fits each
-  // row's widths independently â€” which, combined with merged header
+  // row's widths independently \u2014 which, combined with merged header
   // cells, makes rows drift out of alignment with each other. A fixed
   // <w:tblGrid> (mark-list tables get a wider NO/NAME pair, everything
   // else equal) keeps every row honestly lined up.
@@ -663,10 +691,10 @@ async function downloadReportWord(filenameBase, btnEl){
   const node = document.getElementById("printable");
   if(!node){ showAlert("Nothing to export."); return; }
   const originalHTML = btnEl ? btnEl.innerHTML : null;
-  if(btnEl){ btnEl.disabled = true; btnEl.innerHTML = "Preparingâ€¦"; }
+  if(btnEl){ btnEl.disabled = true; btnEl.innerHTML = "Preparing\u2026"; }
   try{
     const JSZipLib = await ensureJSZip();
-    if(!JSZipLib){ showAlert("Word export tools are still loading â€” please wait a few seconds and try again."); return; }
+    if(!JSZipLib){ showAlert("Word export tools are still loading \u2014 please wait a few seconds and try again."); return; }
     const clone = node.cloneNode(true);
     clone.querySelectorAll(".no-print").forEach(el => el.remove());
     const xmlParts = [];
@@ -710,7 +738,7 @@ async function downloadReportPDF(filenameBase, btnEl){
   const node = document.getElementById("printable");
   if(!node){ showAlert("Nothing to export."); return; }
   const originalHTML = btnEl ? btnEl.innerHTML : null;
-  if(btnEl){ btnEl.disabled = true; btnEl.innerHTML = "Preparing PDFâ€¦"; }
+  if(btnEl){ btnEl.disabled = true; btnEl.innerHTML = "Preparing PDF\u2026"; }
 
   // Temporarily unclip anything horizontally scrollable (wide mark-list
   // tables) so html2canvas captures the FULL content width instead of
@@ -737,7 +765,7 @@ async function downloadReportPDF(filenameBase, btnEl){
   let tempWrapper = null;
   try{
     if(typeof html2canvas === "undefined" || !window.jspdf){
-      showAlert("PDF tools are still loading â€” please wait a few seconds and try again.");
+      showAlert("PDF tools are still loading \u2014 please wait a few seconds and try again.");
       return;
     }
     const { jsPDF } = window.jspdf;
@@ -748,12 +776,12 @@ async function downloadReportPDF(filenameBase, btnEl){
       backgroundColor:"#ffffff",
       useCORS:true,
       windowWidth: fullWidth,
-      // Skip the Download/Close button row itself â€” it shouldn't appear
+      // Skip the Download/Close button row itself \u2014 it shouldn't appear
       // inside the PDF it produces.
       ignoreElements: e => e.classList && e.classList.contains("no-print")
     });
 
-    const addCanvasAsPage = (canvas) => {
+    const addCanvasAsPage = (canvas, fitOnePage) => {
       const landscape = canvas.width > canvas.height;
       const pageW = landscape ? 841.89 : 595.28;
       const pageH = landscape ? 595.28 : 841.89;
@@ -762,6 +790,19 @@ async function downloadReportPDF(filenameBase, btnEl){
       const imgData = canvas.toDataURL("image/jpeg", 0.92);
       if(!pdf) pdf = new jsPDF({orientation: landscape?"landscape":"portrait", unit:"pt", format:"a4"});
       else pdf.addPage("a4", landscape?"landscape":"portrait");
+      if(fitOnePage){
+        // Learner reports must stay on ONE page: shrink slightly if needed
+        // instead of letting the bottom spill onto a second page.
+        const margin = 14;
+        let drawW = imgW, drawH = imgH, x = 0, y = 0;
+        if(imgH > pageH - margin*2){
+          const s = (pageH - margin*2) / imgH;
+          drawW = imgW * s; drawH = imgH * s;
+          x = (pageW - drawW) / 2; y = margin;
+        }
+        pdf.addImage(imgData, "JPEG", x, y, drawW, drawH);
+        return;
+      }
       let heightLeft = imgH, position = 0;
       pdf.addImage(imgData, "JPEG", 0, position, imgW, imgH);
       heightLeft -= pageH;
@@ -774,7 +815,7 @@ async function downloadReportPDF(filenameBase, btnEl){
     };
 
     // A report can mark a section boundary with class "print-page-break"
-    // (e.g. the Subject Analysis block) â€” when present, everything up to
+    // (e.g. the Subject Analysis block) \u2014 when present, everything up to
     // and including it becomes its own PDF page, and everything after it
     // becomes a second page, instead of one continuous image sliced at
     // an arbitrary height.
@@ -794,7 +835,7 @@ async function downloadReportPDF(filenameBase, btnEl){
       document.body.appendChild(tempWrapper);
       addCanvasAsPage(await captureEl(tempWrapper));
     } else {
-      addCanvasAsPage(await captureEl(node));
+      addCanvasAsPage(await captureEl(node), !node.classList.contains("wide"));
     }
 
     const blob = pdf.output("blob");
@@ -822,7 +863,10 @@ function queueCloudPush(){
     if(!cloudWriteQueued) return;
     cloudWriteQueued = false;
     try{
-      await dbNS.doc(SYNC_DOC_PATH).set(buildCloudPayload());
+      const sentSeq = pendingSeq;
+      await withTimeout(dbNS.doc(SYNC_DOC_PATH).set(buildCloudPayload()), 10000, "sync-set");
+      Object.keys(pendingEdits).forEach(k => { if(pendingEdits[k] && pendingEdits[k].v <= sentSeq) delete pendingEdits[k]; });
+      savePendingEdits();
       clearCloudDirty();
       setSyncStatus("connected");
     }catch(e){
@@ -833,31 +877,32 @@ function queueCloudPush(){
   });
 }
 // Retries connecting and/or flushing any offline edits once we're back
-// online â€” fired on the browser's 'online' event, on tab focus, and on
+// online \u2014 fired on the browser's 'online' event, on tab focus, and on
 // a slow background timer as a fallback for flaky mobile connections.
 let reconnecting = false;
 async function attemptReconnectAndFlush(){
   if(reconnecting || syncApplyingRemote) return;
   reconnecting = true;
   try{
-    if(!dbNS){
+    if(!syncPulled){
       const db = await ensureDb();
       if(db){
         SYNC_ENABLED = true;
         try{
           const ref = db.doc(SYNC_DOC_PATH);
-          const snap = await ref.get();
+          const snap = await withTimeout(ref.get(), 6000, "sync-get");
           // Pull + merge first so we don't clobber marks another
           // device/teacher saved while this one was offline.
           if(snap.exists) applyCloudSnapshot(snap.data());
           attachSyncListener();
-          setSyncStatus(cloudDirty ? "connected" : "connected");
+          syncPulled = true;
+          setSyncStatus("connected");
         }catch(e){
-          setSyncStatus("error");
+          setSyncStatus(navigator.onLine === false ? "pending" : "error");
         }
       }
     }
-    if(dbNS && cloudDirty){
+    if(syncPulled && cloudDirty){
       queueCloudPush();
     }
   } finally {
@@ -866,6 +911,7 @@ async function attemptReconnectAndFlush(){
 }
 if(typeof window !== "undefined"){
   window.addEventListener("online", attemptReconnectAndFlush);
+  window.addEventListener("offline", () => setSyncStatus("pending"));
   document.addEventListener("visibilitychange", () => {
     if(document.visibilityState === "visible") attemptReconnectAndFlush();
   });
@@ -953,6 +999,7 @@ function applyCloudSnapshot(data){
   try{
     const cloudGrades = data.grades || {};
     Object.entries(cloudGrades).forEach(([gName, gData]) => applyCloudGradeSlice(gName, gData));
+    reapplyPendingEdits();
 
     // Refresh the active working view from the just-updated store, then
     // run the safety nets against it, then persist back.
@@ -969,7 +1016,7 @@ function applyCloudSnapshot(data){
   }
 }
 // Cleans up same-name duplicate students and same-name/term/year duplicate
-// assessments in the CURRENTLY ACTIVE grade, and â€” critically â€” tells the
+// assessments in the CURRENTLY ACTIVE grade, and \u2014 critically \u2014 tells the
 // cloud to remove them too, so the cleanup sticks everywhere instead of
 // just healing locally each time a snapshot arrives.
 function runDedupeSafetyNets(){
@@ -982,7 +1029,7 @@ function runDedupeSafetyNets(){
   return studentDedupe.changed || mergeResult.changed;
 }
 function syncPushField(_fieldPathArray, _value){
-  // Kept for call-site compatibility â€” every local mutation now pushes
+  // Kept for call-site compatibility \u2014 every local mutation now pushes
   // a full, current snapshot rather than a per-field patch.
   if(syncApplyingRemote) return;
   queueCloudPush();
@@ -1060,14 +1107,14 @@ function mergeDuplicateAssessments(){
   });
   return { changed, removedIds, keptIds };
 }
-// Used only when this device has NO saved data yet â€” checks the cloud
+// Used only when this device has NO saved data yet \u2014 checks the cloud
 // FIRST, before ever generating a fresh starter roster, so a brand-new
 // device can never create duplicate students alongside the real ones.
 // Only bootstraps the currently-active grade; other grades load lazily
 // the first time someone switches to them (via the live listener, which
 // already carries every grade's data once connected).
 // Races any promise against a timeout so a stalled connection can never
-// block the app from opening â€” used around every network call in the
+// block the app from opening \u2014 used around every network call in the
 // sync layer below.
 function withTimeout(promise, ms, label){
   return Promise.race([
@@ -1095,6 +1142,7 @@ async function bootstrapFromCloudOrSeed(){
         clearCloudDirty();
       }
       attachSyncListener();
+      syncPulled = true;
       setSyncStatus("connected");
     }catch(e){
       setSyncStatus("error");
@@ -1108,7 +1156,7 @@ async function bootstrapFromCloudOrSeed(){
     syncActiveGradeFromStore();
   }
 }
-// Used when this device already has saved data â€” connects to the cloud
+// Used when this device already has saved data \u2014 connects to the cloud
 // and reconciles, without ever discarding what's already here.
 async function initSync(){
   setSyncStatus("connecting");
@@ -1121,6 +1169,7 @@ async function initSync(){
     if(!snap.exists){ await withTimeout(ref.set(buildCloudPayload()), 6000, "sync-set"); clearCloudDirty(); }
     else applyCloudSnapshot(snap.data());
     attachSyncListener();
+    syncPulled = true;
     setSyncStatus("connected");
     if(cloudDirty) queueCloudPush();
   }catch(e){
@@ -1131,7 +1180,7 @@ async function initSync(){
 // One-time migration: backfills learner names for any grade that has
 // ROSTER data on file but currently has an empty roster in the app
 // (e.g. a grade that was visited before names were supplied). Never
-// touches a grade that already has students â€” existing entries always
+// touches a grade that already has students \u2014 existing entries always
 // win. Pushes the addition to the cloud too, so it reaches every device.
 function backfillMissingRosters(){
   let changed = false;
@@ -1238,7 +1287,7 @@ function addStudent(){
 }
 function removeStudent(studentId){
   const msg = SYNC_ENABLED
-    ? "Permanently remove this student from the roster and all assessments? This will remove them everywhere â€” including every other teacher's copy once they're back online."
+    ? "Permanently remove this student from the roster and all assessments? This will remove them everywhere \u2014 including every other teacher's copy once they're back online."
     : "Remove this student from the roster and all assessments?";
   showConfirm(msg, () => {
     state.students = state.students.filter(s => s.id!==studentId);
@@ -1286,7 +1335,7 @@ function addAssessment(presetTerm){
       ui.selectedAssessmentId = existing.id;
       ui.activeTab = "assessment";
       render();
-      showAlert(`"${name.trim()}" already exists â€” switched to it instead of creating a duplicate. Enter marks there.`);
+      showAlert(`"${name.trim()}" already exists \u2014 switched to it instead of creating a duplicate. Enter marks there.`);
       return;
     }
     const scores = {};
@@ -1302,7 +1351,7 @@ function addAssessment(presetTerm){
 function removeAssessment(id){
   if(state.assessments.length<=1){ showAlert("You need at least one assessment."); return; }
   const msg = SYNC_ENABLED
-    ? "Permanently delete this assessment? This will remove it everywhere â€” including every other teacher's copy once they're back online."
+    ? "Permanently delete this assessment? This will remove it everywhere \u2014 including every other teacher's copy once they're back online."
     : "Delete this assessment? This cannot be undone.";
   showConfirm(msg, () => {
     state.assessments = state.assessments.filter(a=>a.id!==id);
@@ -1317,6 +1366,7 @@ function updateScore(assessmentId, studentId, subject, value){
   if(!a.scores[studentId]) a.scores[studentId]={};
   if(value===""){
     delete a.scores[studentId][subject];
+    recordPendingEdit(state.currentGrade, assessmentId, studentId, subject, null);
     scheduleSave();
     if(!refreshEntrySummary()) render();
     try{ queueCloudPush(); }catch(e){}
@@ -1324,6 +1374,7 @@ function updateScore(assessmentId, studentId, subject, value){
     const num = Math.max(0, Math.min(100, Number(value)));
     const finalVal = Number.isNaN(num) ? "" : num;
     a.scores[studentId][subject] = finalVal;
+    recordPendingEdit(state.currentGrade, assessmentId, studentId, subject, finalVal);
     scheduleSave();
     if(!refreshEntrySummary()) render();
     syncPushField(["assessments", assessmentId, "scores", studentId, subject], finalVal);
@@ -1390,7 +1441,7 @@ function handleCSVUpload(file){
         ui.activeTab = "assessment";
         persistAndRender();
         syncPushField(["assessments", existing.id, "scores"], existing.scores);
-        showAlert(`"${name.trim()}" already existed â€” merged this CSV's marks into it instead of creating a duplicate.`);
+        showAlert(`"${name.trim()}" already existed \u2014 merged this CSV's marks into it instead of creating a duplicate.`);
         return;
       }
 
@@ -1406,12 +1457,12 @@ function handleCSVUpload(file){
 }
 
 /* =========================================================
-   EXPORT / IMPORT â€” merge marks entered on other phones
+   EXPORT / IMPORT \u2014 merge marks entered on other phones
 ========================================================= */
 function manualMergeDuplicates(){
   const result = mergeDuplicateAssessments();
   if(!result.changed){
-    showAlert("No duplicate assessments found â€” everything is already clean.");
+    showAlert("No duplicate assessments found \u2014 everything is already clean.");
     return;
   }
   persistAndRender();
@@ -1420,7 +1471,7 @@ function manualMergeDuplicates(){
       queueCloudPush();
       showAlert(`Merged ${result.removedIds.length} duplicate assessment(s) into one. This will reach your other devices next time they're online.`);
     }catch(e){
-      showAlert("Merged on this device, but couldn't reach the shared copy â€” check your internet and try again.");
+      showAlert("Merged on this device, but couldn't reach the shared copy \u2014 check your internet and try again.");
     }
   } else {
     showAlert(`Merged ${result.removedIds.length} duplicate assessment(s) on this device.`);
@@ -1443,7 +1494,7 @@ function emergencyResetRoster(){
         queueCloudPush();
         showAlert(`${state.className} reset and pushed to your other devices.`);
       }catch(e){
-        showAlert("Reset saved on this device, but couldn't reach the shared copy â€” check your internet and try again.");
+        showAlert("Reset saved on this device, but couldn't reach the shared copy \u2014 check your internet and try again.");
       }
     } else {
       showAlert(`${state.className} reset on this device.`);
@@ -1499,7 +1550,7 @@ async function exportAllGrades(){
 }
 
 // Shared merge logic used by both the single-grade Import and the
-// all-grades backup restore below â€” merges into state.grades[gName]
+// all-grades backup restore below \u2014 merges into state.grades[gName]
 // directly (matching students by name), never deletes anything.
 function mergeGradeSlice(gName, incoming){
   if(!state.grades[gName]) state.grades[gName] = blankGradeData(gName);
@@ -1554,13 +1605,13 @@ function importData(file){
   reader.onload = () => {
     let data;
     try{ data = JSON.parse(String(reader.result)); }
-    catch(e){ showAlert("Couldn't read that file â€” it doesn't look like a valid export."); return; }
+    catch(e){ showAlert("Couldn't read that file \u2014 it doesn't look like a valid export."); return; }
 
-    // Full "Export All Grades" backup file â€” restore every grade in it.
+    // Full "Export All Grades" backup file \u2014 restore every grade in it.
     if(data && data.allGrades && data.grades && typeof data.grades === "object"){
       const gradeNames = Object.keys(data.grades);
       if(!gradeNames.length){ showAlert("That backup file doesn't contain any grades."); return; }
-      showConfirm(`This is a full backup covering ${gradeNames.length} grade(s). Restore it into the app? This won't delete anything â€” it only fills in and adds scores.`, () => {
+      showConfirm(`This is a full backup covering ${gradeNames.length} grade(s). Restore it into the app? This won't delete anything \u2014 it only fills in and adds scores.`, () => {
         let totalMerged = 0, totalAdded = 0;
         gradeNames.forEach(gName => {
           const r = mergeGradeSlice(gName, data.grades[gName]);
@@ -1579,7 +1630,7 @@ function importData(file){
 
     if(!data || !Array.isArray(data.assessments)){ showAlert("That file doesn't look like a BOSIANGO 2026 Assessment export."); return; }
 
-    showConfirm(`Merge marks from this file into your current data? This won't delete anything â€” it only fills in and adds scores.`, () => {
+    showConfirm(`Merge marks from this file into your current data? This won't delete anything \u2014 it only fills in and adds scores.`, () => {
       const idByName = {};
       state.students.forEach(s => idByName[s.name.toUpperCase()]=s.id);
 
@@ -1698,7 +1749,7 @@ function renderRoster(){
       </div>
       <button class="btn" onclick="addStudent()">${icon("plus",16)} Add student</button>
     </div>
-    <p class="small-note">${state.students.length} students Â· ${state.assessments.length} assessment${state.assessments.length===1?"":"s"} recorded</p>
+    <p class="small-note">${state.students.length} students \u00b7 ${state.assessments.length} assessment${state.assessments.length===1?"":"s"} recorded</p>
     <div class="grid-cards">${cards}</div>
     <div style="margin-top:30px;padding-top:20px;border-top:1px solid var(--navy-line);">
       <h3 style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--navy-soft);margin:0 0 10px;">Subject Teachers</h3>
@@ -1714,7 +1765,7 @@ function renderRoster(){
     </div>
     <div style="margin-top:30px;padding-top:20px;border-top:1px solid var(--navy-line);">
       <h3 style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--navy-soft);margin:0 0 6px;">Full Backup</h3>
-      <p class="small-note">Saves every grade's roster and marks into a single file â€” a full safety copy in one tap, in case anything ever happens to this app. Restoring only fills in blanks â€” it never overwrites a mark that's already there.</p>
+      <p class="small-note">Saves every grade's roster and marks into a single file \u2014 a full safety copy in one tap, in case anything ever happens to this app. Restoring only fills in blanks \u2014 it never overwrites a mark that's already there.</p>
       <div class="row">
         <button class="btn outline sm" onclick="exportAllGrades()">${icon("download",14)} Export All Grades</button>
         <button class="btn outline sm" onclick="document.getElementById('importInput').click()">${icon("upload",14)} Restore All Grades</button>
@@ -1722,12 +1773,12 @@ function renderRoster(){
     </div>
     <div style="margin-top:30px;padding-top:20px;border-top:1px solid var(--navy-line);">
       <h3 style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--navy-soft);margin:0 0 6px;">Fix Split/Duplicate Assessments</h3>
-      <p class="small-note">If different teachers each created their own copy of the same assessment (e.g. two "Mid Term 3" entries), tap this to combine them into one â€” no marks are lost, they're merged together and the extra copy is removed everywhere.</p>
+      <p class="small-note">If different teachers each created their own copy of the same assessment (e.g. two "Mid Term 3" entries), tap this to combine them into one \u2014 no marks are lost, they're merged together and the extra copy is removed everywhere.</p>
       <button class="btn outline sm" onclick="manualMergeDuplicates()">${icon("check",14)} Merge duplicate assessments now</button>
     </div>
     <div style="margin-top:30px;padding-top:20px;border-top:1px solid var(--navy-line);">
       <h3 style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--navy-soft);margin:0 0 6px;">App Lock (this device only)</h3>
-      <p class="small-note">${getLockPassword() ? "A password is currently set on this device." : "No password set â€” anyone who opens this file on this device can use it freely."} This is a screen lock, not full security â€” set it to keep casual browsers out.</p>
+      <p class="small-note">${getLockPassword() ? "A password is currently set on this device." : "No password set \u2014 anyone who opens this file on this device can use it freely."} This is a screen lock, not full security \u2014 set it to keep casual browsers out.</p>
       <div class="row">
         <button class="btn outline sm" onclick="setAppLock()">${icon("alert",14)} ${getLockPassword() ? "Change password" : "Set password"}</button>
         ${getLockPassword() ? `<button class="btn outline sm" onclick="removeAppLock()">${icon("x",14)} Remove lock</button>` : ""}
@@ -1735,7 +1786,7 @@ function renderRoster(){
     </div>
     <div style="margin-top:30px;padding-top:20px;border-top:1px solid var(--be);">
       <h3 style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--be);margin:0 0 6px;">Emergency: Reset ${esc(state.className)}</h3>
-      <p class="small-note">If duplicates or a data mix-up happen again, this resets ${esc(state.className)} only (other grades are untouched) and pushes it to every synced device. Only use this on one device â€” everyone else will pick it up automatically next time they open the app.</p>
+      <p class="small-note">If duplicates or a data mix-up happen again, this resets ${esc(state.className)} only (other grades are untouched) and pushes it to every synced device. Only use this on one device \u2014 everyone else will pick it up automatically next time they open the app.</p>
       <button class="btn outline sm" style="border-color:var(--be);color:var(--be);" onclick="emergencyResetRoster()">${icon("alert",14)} Reset ${esc(state.className)}</button>
     </div>`;
 }
@@ -1767,7 +1818,7 @@ function renderEntry(){
     }).join("");
     const avg = count ? (sum/count).toFixed(1) : null;
     body = `
-      <p class="small-note" id="entrySummaryLine">${filled} of ${state.students.length} entered${avg!==null ? " Â· class average "+avg+"%" : ""}</p>
+      <p class="small-note" id="entrySummaryLine">${filled} of ${state.students.length} entered${avg!==null ? " \u00b7 class average "+avg+"%" : ""}</p>
       <table><thead><tr><th>Student</th><th style="text-align:right;">${esc(ui.mySubject)} (%)</th></tr></thead><tbody>${rows}</tbody></table>`;
   }
 
@@ -1839,7 +1890,7 @@ function renderAssessment(){
         <td style="border-left:2px solid var(--navy);"><div style="display:flex;align-items:center;gap:8px;">${avatarHTML(r.photo, r.name, 24)}<span style="font-weight:600;">${esc(r.name)}</span></div></td>
         <td style="text-align:right;font-weight:600;border-left:2px solid var(--navy);">${r.totalMarks||0}</td>
         <td style="text-align:right;font-weight:600;border-left:2px solid var(--navy);">${r.totalPoints||0}/${SUBJECTS.length*8}</td>
-        <td style="text-align:right;color:var(--navy-soft);border-left:1px solid var(--navy-line);">${r.avgPoints!==null?r.avgPoints.toFixed(2):"â€”"}</td>
+        <td style="text-align:right;color:var(--navy-soft);border-left:1px solid var(--navy-line);">${r.avgPoints!==null?r.avgPoints.toFixed(2):"\u2014"}</td>
         <td style="text-align:center;border-left:2px solid var(--navy);">${gradePill(r.grade)}</td>
         <td style="text-align:center;">${expanded?icon("chevronDown",14):icon("chevronRight",14)}</td>
       </tr>${expandHTML}`;
@@ -1847,7 +1898,7 @@ function renderAssessment(){
 
   return header + `
     <div style="display:grid;grid-template-columns:1fr;gap:14px;margin:20px 0;" class="two-col">
-      <div class="chart-card"><h3>Class ranking â€” total marks</h3>${barChart(rankData,"name","marks")}</div>
+      <div class="chart-card"><h3>Class ranking \u2014 total marks</h3>${barChart(rankData,"name","marks")}</div>
       <div class="chart-card"><h3>Class average by subject (%)</h3>${barChart(subjData,"subject","avg",100, v=>v+"%")}</div>
     </div>
     <div style="border:1px solid var(--navy-line);border-radius:2px;overflow-x:auto;">
@@ -1890,12 +1941,12 @@ function renderTerms(){
       <td style="border-left:2px solid var(--navy);"><div style="display:flex;align-items:center;gap:8px;">${avatarHTML(r.photo,r.name,22)}<span style="font-weight:600;">${esc(r.name)}</span></div></td>
       <td style="text-align:right;font-weight:600;border-left:2px solid var(--navy);">${r.totalMarks||0}</td>
       <td style="text-align:right;font-weight:600;border-left:2px solid var(--navy);">${r.totalPoints||0}/${SUBJECTS.length*8}</td>
-      <td style="text-align:right;color:var(--navy-soft);border-left:1px solid var(--navy-line);">${r.avgPoints!==null?r.avgPoints.toFixed(2):"â€”"}</td>
+      <td style="text-align:right;color:var(--navy-soft);border-left:1px solid var(--navy-line);">${r.avgPoints!==null?r.avgPoints.toFixed(2):"\u2014"}</td>
       <td style="text-align:center;border-left:2px solid var(--navy);">${gradePill(r.grade)}</td>
       <td style="text-align:center;"><button style="background:none;border:none;cursor:pointer;color:var(--navy-soft);" onclick="openReport('${r.studentId}')" title="Download report">${icon("download",14)}</button></td>
     </tr>`).join("");
     termSection = `<div style="border:1px solid var(--navy-line);border-radius:2px;overflow-x:auto;margin-bottom:30px;">
-      <p style="font-size:11px;color:var(--navy-soft);padding:10px 10px 0;">${esc(termAsm.name)} Â· ${rows.length} learners</p>
+      <p style="font-size:11px;color:var(--navy-soft);padding:10px 10px 0;">${esc(termAsm.name)} \u00b7 ${rows.length} learners</p>
       <table style="margin-top:6px;"><thead><tr><th style="width:30px;">Pos</th><th style="border-left:2px solid var(--navy);">Student</th><th style="text-align:right;border-left:2px solid var(--navy);">Total Marks</th><th style="text-align:right;border-left:2px solid var(--navy);">Total Points</th><th style="text-align:right;border-left:1px solid var(--navy-line);">Avg pts</th><th style="text-align:center;border-left:2px solid var(--navy);">Grade</th><th style="width:20px;"></th></tr></thead>
       <tbody>${trows}</tbody></table></div>`;
   }
@@ -1924,8 +1975,8 @@ function renderTerms(){
   const yearTableRows = yearRows.map((r,idx) => `<tr class="${idx%2?'zebra':''}">
     <td>${r.position}</td>
     <td style="font-weight:600;">${esc(r.name)}</td>
-    ${TERMS.map(t => `<td style="text-align:right;color:var(--navy-soft);">${r.marksByTerm[t]!==null&&r.marksByTerm[t]!==undefined?r.marksByTerm[t]:"â€”"}</td>`).join("")}
-    <td style="text-align:right;font-weight:600;">${r.yearAvg!==null?r.yearAvg.toFixed(1):"â€”"}</td>
+    ${TERMS.map(t => `<td style="text-align:right;color:var(--navy-soft);">${r.marksByTerm[t]!==null&&r.marksByTerm[t]!==undefined?r.marksByTerm[t]:"\u2014"}</td>`).join("")}
+    <td style="text-align:right;font-weight:600;">${r.yearAvg!==null?r.yearAvg.toFixed(1):"\u2014"}</td>
   </tr>`).join("");
 
   return `
@@ -1989,20 +2040,20 @@ function renderCompare(){
       <td style="text-align:right;font-weight:600;">${m.b.totalMarks}</td>
       <td style="text-align:right;color:var(--navy-soft);">${((m.a.totalMarks+m.b.totalMarks)/2).toFixed(1)}</td>
       <td style="text-align:right;" class="${deltaClass}">${m.delta>0?"+":""}${m.delta}</td>
-      <td style="text-align:center;" class="${rankClass}">${m.posDelta===0?"â€”":Math.abs(m.posDelta)}</td>
+      <td style="text-align:center;" class="${rankClass}">${m.posDelta===0?"\u2014":Math.abs(m.posDelta)}</td>
     </tr>`;
   }).join("");
 
   const averagedRows = computeAveragedRows(state.students, asmA, asmB);
   const sortedAvgRows = [...averagedRows].sort((a,b)=>a.position-b.position);
   const avgRankRows = sortedAvgRows.map((r,idx) => {
-    const subjCells = r.perSubject.map(p => `<td style="text-align:center;">${p.pct===null?"â€”":p.pct}</td>`).join("");
+    const subjCells = r.perSubject.map(p => `<td style="text-align:center;">${p.pct===null?"\u2014":p.pct}</td>`).join("");
     return `<tr class="${idx%2?'zebra':''}">
       <td>${positionBadge(r.position, sortedAvgRows.length)}</td>
       <td style="font-weight:600;">${esc(r.name)}</td>
       ${subjCells}
       <td style="text-align:right;font-weight:700;">${r.totalMarks}</td>
-      <td style="text-align:right;color:var(--navy-soft);">${r.avgPoints!==null?r.avgPoints.toFixed(2):"â€”"}</td>
+      <td style="text-align:right;color:var(--navy-soft);">${r.avgPoints!==null?r.avgPoints.toFixed(2):"\u2014"}</td>
       <td style="text-align:center;">${gradePill(r.grade)}</td>
     </tr>`;
   }).join("");
@@ -2010,16 +2061,16 @@ function renderCompare(){
 
   return picker + `
     <div style="display:grid;grid-template-columns:1fr;gap:14px;margin-bottom:20px;">
-      <div class="chart-card"><h3>${esc(asmA.name)} â€” total marks</h3>${barChart(avgAData,"name","marks")}</div>
-      <div class="chart-card"><h3>${esc(asmB.name)} â€” total marks</h3>${barChart(avgBData,"name","marks")}</div>
+      <div class="chart-card"><h3>${esc(asmA.name)} \u2014 total marks</h3>${barChart(avgAData,"name","marks")}</div>
+      <div class="chart-card"><h3>${esc(asmB.name)} \u2014 total marks</h3>${barChart(avgBData,"name","marks")}</div>
     </div>
     <div style="border:1px solid var(--navy-line);border-radius:2px;overflow-x:auto;">
       <table><thead><tr><th>Student</th><th style="text-align:right;">${esc(asmA.name)}</th><th style="text-align:right;">${esc(asmB.name)}</th><th style="text-align:right;">Average</th><th style="text-align:right;">Change</th><th style="text-align:center;">Rank move</th></tr></thead>
       <tbody>${movementRows}</tbody></table>
     </div>
 
-    <h3 style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--navy-soft);margin:24px 0 10px;">Average Performance â€” Ranked (per subject)</h3>
-    <p class="small-note">Each subject shown here is the average of that subject across both assessments, then ranked as its own result â€” not just an average of the two totals.</p>
+    <h3 style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--navy-soft);margin:24px 0 10px;">Average Performance \u2014 Ranked (per subject)</h3>
+    <p class="small-note">Each subject shown here is the average of that subject across both assessments, then ranked as its own result \u2014 not just an average of the two totals.</p>
     <div class="row" style="margin-bottom:10px;">
       <button class="btn outline sm" onclick="openAverageReport()">${icon("download",14)} Download Average Report</button>
     </div>
@@ -2050,12 +2101,12 @@ function buildStudentReportCardHTML(studentId, opts){
     const classAvg = classAvgs[p.subject];
     return `<tr style="border-bottom:1px solid var(--navy-line);">
       <td>${p.subject}</td>
-      <td style="text-align:center;">${p.pct===null?"â€”":p.pct}</td>
-      <td style="text-align:center;color:var(--navy-soft);">${classAvg!==undefined?classAvg.toFixed(1):"â€”"}</td>
-      <td style="text-align:center;">${p.points===null?"â€”":p.points}</td>
+      <td style="text-align:center;">${p.pct===null?"\u2014":p.pct}</td>
+      <td style="text-align:center;color:var(--navy-soft);">${classAvg!==undefined?classAvg.toFixed(1):"\u2014"}</td>
+      <td style="text-align:center;">${p.points===null?"\u2014":p.points}</td>
       <td style="text-align:center;">${LEVEL_NUM[band]}</td>
       <td>${remarkSet[band]}</td>
-      <td>${esc(state.subjectTeachers[p.subject]||"â€”")}</td>
+      <td>${esc(state.subjectTeachers[p.subject]||"\u2014")}</td>
     </tr>`;
   }).join("");
 
@@ -2089,7 +2140,7 @@ function buildStudentReportCardHTML(studentId, opts){
               <td>AVERAGE (%)</td><td style="text-align:center;">${avgMarks.toFixed(1)}</td><td></td><td></td><td></td><td></td><td></td>
             </tr>
             <tr style="font-weight:700;">
-              <td>AVERAGE POINTS</td><td></td><td></td><td style="text-align:center;">${row.avgPoints!==null?row.avgPoints.toFixed(2):"â€”"}</td><td></td><td>${row.grade}</td><td></td>
+              <td>AVERAGE POINTS</td><td></td><td></td><td style="text-align:center;">${row.avgPoints!==null?row.avgPoints.toFixed(2):"\u2014"}</td><td></td><td>${row.grade}</td><td></td>
             </tr>
           </tbody>
         </table>
@@ -2098,7 +2149,7 @@ function buildStudentReportCardHTML(studentId, opts){
         <p style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--navy-soft);margin:16px 0 4px;">Class Teacher's Comment</p>
         <p style="font-size:13px;font-style:italic;margin:0 0 20px;">${esc(comment)}</p>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:12px;padding-top:10px;border-top:1px solid var(--navy-line);">
-          <div><b style="color:var(--navy-soft);">CLASS TEACHER: </b>${esc(state.classTeacher||"â€”")}</div>
+          <div><b style="color:var(--navy-soft);">CLASS TEACHER: </b>${esc(state.classTeacher||"\u2014")}</div>
           <div><b style="color:var(--navy-soft);">SIGN: </b>________________</div>
           <div><b style="color:var(--navy-soft);">PARENT/GUARDIAN: </b>________________</div>
           <div><b style="color:var(--navy-soft);">SIGN: </b>________________</div>
@@ -2117,7 +2168,7 @@ function openReport(studentId){
 function closeReport(){ document.getElementById("reportRoot").innerHTML = ""; }
 
 // Builds ONE PDF containing every learner's individual report, one
-// learner per page, in class rank order â€” instead of downloading each
+// learner per page, in class rank order \u2014 instead of downloading each
 // student's report separately.
 async function downloadAllLearnerReports(btnEl){
   const asm = state.assessments.find(a=>a.id===ui.selectedAssessmentId) || state.assessments[0];
@@ -2134,7 +2185,7 @@ async function downloadAllLearnerReports(btnEl){
 
   try{
     if(typeof html2canvas === "undefined" || !window.jspdf){
-      showAlert("PDF tools are still loading â€” please wait a few seconds and try again.");
+      showAlert("PDF tools are still loading \u2014 please wait a few seconds and try again.");
       return;
     }
     const { jsPDF } = window.jspdf;
@@ -2142,7 +2193,7 @@ async function downloadAllLearnerReports(btnEl){
     const pageW = 595.28, pageH = 841.89; // A4 portrait, matches individual report layout
 
     for(let i=0; i<rows.length; i++){
-      if(btnEl) btnEl.innerHTML = `Preparing ${i+1} of ${rows.length}â€¦`;
+      if(btnEl) btnEl.innerHTML = `Preparing ${i+1} of ${rows.length}\u2026`;
       const cardHTML = buildStudentReportCardHTML(rows[i].studentId, {withButtons:false, elementId:"batchPrintable"});
       if(!cardHTML) continue;
       stage.innerHTML = cardHTML;
@@ -2154,19 +2205,15 @@ async function downloadAllLearnerReports(btnEl){
       const imgData = canvas.toDataURL("image/jpeg", 0.92);
       if(!pdf) pdf = new jsPDF({orientation:"portrait", unit:"pt", format:"a4"});
       else pdf.addPage("a4", "portrait");
-      if(imgH <= pageH){
-        pdf.addImage(imgData, "JPEG", 0, 0, imgW, imgH);
-      } else {
-        // rare: a very long report spills onto a second page for that learner
-        let heightLeft = imgH, position = 0;
-        pdf.addImage(imgData, "JPEG", 0, position, imgW, imgH);
-        heightLeft -= pageH;
-        while(heightLeft > 0){
-          position = heightLeft - imgH;
-          pdf.addPage("a4", "portrait");
-          pdf.addImage(imgData, "JPEG", 0, position, imgW, imgH);
-          heightLeft -= pageH;
+      {
+        const margin = 14;
+        let drawW = imgW, drawH = imgH, x = 0, y = 0;
+        if(imgH > pageH - margin*2){
+          const s = (pageH - margin*2) / imgH;
+          drawW = imgW * s; drawH = imgH * s;
+          x = (pageW - drawW) / 2; y = margin;
         }
+        pdf.addImage(imgData, "JPEG", x, y, drawW, drawH);
       }
     }
 
@@ -2207,8 +2254,8 @@ function openAverageReport(){
       <td style="text-align:center;">${mean.toFixed(1)}</td>
       <td style="text-align:center;">${meanPts}</td>
       <td style="text-align:center;">${band}</td>
-      <td style="text-align:center;">${high===null?"â€”":high}</td>
-      <td style="text-align:center;">${low===null?"â€”":low}</td>
+      <td style="text-align:center;">${high===null?"\u2014":high}</td>
+      <td style="text-align:center;">${low===null?"\u2014":low}</td>
     </tr>`;
   }).join("");
 
@@ -2217,8 +2264,8 @@ function openAverageReport(){
   const classRows = sortedRows.map((r,idx) => {
     const subjCells = rankedSubjects.map(subj => {
       const p = r.perSubject.find(x=>x.subject===subj);
-      const pct = p && p.pct!==null && p.pct!==undefined ? p.pct : "â€”";
-      const pts = p && p.points!==null && p.points!==undefined ? p.points : "â€”";
+      const pct = p && p.pct!==null && p.pct!==undefined ? p.pct : "\u2014";
+      const pts = p && p.points!==null && p.points!==undefined ? p.points : "\u2014";
       return `<td style="text-align:center;border-left:2px solid var(--navy);">${pct}</td><td style="text-align:center;border-left:1px solid var(--navy-line);">${pts}</td>`;
     }).join("");
     return `<tr style="border-bottom:1px solid var(--navy-line);">
@@ -2227,7 +2274,7 @@ function openAverageReport(){
       ${subjCells}
       <td style="text-align:center;font-weight:700;border-left:2px solid var(--navy);">${r.totalMarks}</td>
       <td style="text-align:center;font-weight:700;">${r.totalPoints}/${SUBJECTS.length*8}</td>
-      <td style="text-align:center;">${r.avgPoints!==null?r.avgPoints.toFixed(2):"â€”"}</td>
+      <td style="text-align:center;">${r.avgPoints!==null?r.avgPoints.toFixed(2):"\u2014"}</td>
       <td style="text-align:center;font-weight:700;">${r.position}</td>
     </tr>`;
   }).join("");
@@ -2248,8 +2295,8 @@ function openAverageReport(){
         <div class="print-page-break">
           ${logoHTML}
           <h2 style="text-align:center;font-size:18px;margin:0;">BOSIANGO COMPREHENSIVE SCHOOL</h2>
-          <p style="text-align:center;font-size:11px;color:var(--navy-soft);margin:4px 0 4px;">AVERAGE PERFORMANCE REPORT â€” SUBJECT ANALYSIS</p>
-          <p style="text-align:center;font-size:12px;margin:0 0 16px;"><b>${esc(state.className)}</b> â€” Average of ${esc(asmA.name)} &amp; ${esc(asmB.name)} Â· ${rows.length} learners Â· Class Mean ${overallMean.toFixed(1)}%</p>
+          <p style="text-align:center;font-size:11px;color:var(--navy-soft);margin:4px 0 4px;">AVERAGE PERFORMANCE REPORT \u2014 SUBJECT ANALYSIS</p>
+          <p style="text-align:center;font-size:12px;margin:0 0 16px;"><b>${esc(state.className)}</b> \u2014 Average of ${esc(asmA.name)} &amp; ${esc(asmB.name)} \u00b7 ${rows.length} learners \u00b7 Class Mean ${overallMean.toFixed(1)}%</p>
 
           <p style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--navy-soft);margin-bottom:6px;">Mean Subject Scores (MSS)</p>
           <table style="font-size:11px;">
@@ -2258,8 +2305,8 @@ function openAverageReport(){
           </table>
         </div>
 
-        <div style="font-size:11px;color:var(--navy-soft);text-align:center;margin:20px 0 14px;">â€” AVERAGE MARK LIST â€”</div>
-        <p style="text-align:center;font-size:11px;font-weight:700;margin:0 0 10px;">BOSIANGO COMPREHENSIVE SCHOOL â€” ${esc(state.className)} Â· Average of ${esc(asmA.name)} &amp; ${esc(asmB.name)}</p>
+        <div style="font-size:11px;color:var(--navy-soft);text-align:center;margin:20px 0 14px;">\u2014 AVERAGE MARK LIST \u2014</div>
+        <p style="text-align:center;font-size:11px;font-weight:700;margin:0 0 10px;">BOSIANGO COMPREHENSIVE SCHOOL \u2014 ${esc(state.className)} \u00b7 Average of ${esc(asmA.name)} &amp; ${esc(asmB.name)}</p>
         <div style="overflow-x:auto;">
         <table style="font-size:9px;min-width:1000px;">
           <thead>
@@ -2279,7 +2326,7 @@ function openAverageReport(){
         </div>
 
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:12px;padding-top:16px;margin-top:20px;border-top:1px solid var(--navy-line);">
-          <div><b style="color:var(--navy-soft);">CLASS TEACHER: </b>${esc(state.classTeacher||"â€”")}</div>
+          <div><b style="color:var(--navy-soft);">CLASS TEACHER: </b>${esc(state.classTeacher||"\u2014")}</div>
           <div><b style="color:var(--navy-soft);">SIGN: </b>________________</div>
         </div>
       </div>
@@ -2309,8 +2356,8 @@ function openClassReport(){
       <td style="text-align:center;">${mean.toFixed(1)}</td>
       <td style="text-align:center;">${meanPts}</td>
       <td style="text-align:center;">${band}</td>
-      <td style="text-align:center;">${high===null?"â€”":high}</td>
-      <td style="text-align:center;">${low===null?"â€”":low}</td>
+      <td style="text-align:center;">${high===null?"\u2014":high}</td>
+      <td style="text-align:center;">${low===null?"\u2014":low}</td>
     </tr>`;
   }).join("");
 
@@ -2322,8 +2369,8 @@ function openClassReport(){
   const classRows = sortedClassRows.map((r,idx) => {
     const subjCells = rankedSubjects.map(subj => {
       const p = r.perSubject.find(x=>x.subject===subj);
-      const pct = p && p.pct!==null && p.pct!==undefined ? p.pct : "â€”";
-      const pts = p && p.points!==null && p.points!==undefined ? p.points : "â€”";
+      const pct = p && p.pct!==null && p.pct!==undefined ? p.pct : "\u2014";
+      const pts = p && p.points!==null && p.points!==undefined ? p.points : "\u2014";
       return `<td style="text-align:center;border-left:2px solid var(--navy);">${pct}</td><td style="text-align:center;border-left:1px solid var(--navy-line);">${pts}</td>`;
     }).join("");
     return `<tr style="border-bottom:1px solid var(--navy-line);">
@@ -2332,7 +2379,7 @@ function openClassReport(){
       ${subjCells}
       <td style="text-align:center;font-weight:700;border-left:2px solid var(--navy);">${r.totalMarks}</td>
       <td style="text-align:center;font-weight:700;">${r.totalPoints}/${SUBJECTS.length*8}</td>
-      <td style="text-align:center;">${r.avgPoints!==null?r.avgPoints.toFixed(2):"â€”"}</td>
+      <td style="text-align:center;">${r.avgPoints!==null?r.avgPoints.toFixed(2):"\u2014"}</td>
       <td style="text-align:center;font-weight:700;">${r.position}</td>
     </tr>`;
   }).join("");
@@ -2342,7 +2389,7 @@ function openClassReport(){
 
   // Official-use summary rows at the foot of the mark list: TOTAL (sum
   // of every learner's mark/points per subject) and MSS (Mean Subject
-  // Score â€” the same per-subject mean shown above, restated here for
+  // Score \u2014 the same per-subject mean shown above, restated here for
   // quick reference/verification directly under the list itself).
   const grandTotalMarks = rows.reduce((a,r)=>a+(r.totalMarks||0),0);
   const grandTotalPoints = rows.reduce((a,r)=>a+(r.totalPoints||0),0);
@@ -2368,8 +2415,8 @@ function openClassReport(){
       ${totalRowCells}
       <td style="text-align:center;border-left:2px solid var(--navy);">${grandTotalMarks}</td>
       <td style="text-align:center;">${grandTotalPoints}</td>
-      <td style="text-align:center;">â€”</td>
-      <td style="text-align:center;">â€”</td>
+      <td style="text-align:center;">\u2014</td>
+      <td style="text-align:center;">\u2014</td>
     </tr>
     <tr style="border-top:1px solid var(--navy);font-weight:700;">
       <td colspan="2">MSS</td>
@@ -2377,7 +2424,7 @@ function openClassReport(){
       <td style="text-align:center;border-left:2px solid var(--navy);">${meanTotalMarks.toFixed(1)}</td>
       <td style="text-align:center;">${meanTotalPoints.toFixed(1)}</td>
       <td style="text-align:center;">${meanAvgPoints.toFixed(2)}</td>
-      <td style="text-align:center;">â€”</td>
+      <td style="text-align:center;">\u2014</td>
     </tr>`;
 
   const logoHTML = state.schoolLogo ? `<div style="text-align:center;margin-bottom:8px;"><img src="${state.schoolLogo}" style="width:56px;height:56px;border-radius:50%;object-fit:cover;border:1px solid var(--navy-line);"></div>` : "";
@@ -2394,8 +2441,8 @@ function openClassReport(){
         <div class="print-page-break">
           ${logoHTML}
           <h2 style="text-align:center;font-size:18px;margin:0;">BOSIANGO COMPREHENSIVE SCHOOL</h2>
-          <p style="text-align:center;font-size:11px;color:var(--navy-soft);margin:4px 0 4px;">CLASS PERFORMANCE REPORT â€” SUBJECT ANALYSIS</p>
-          <p style="text-align:center;font-size:12px;margin:0 0 16px;"><b>${esc(state.className)}</b> â€” ${esc(asm.name)} Â· ${rows.length} learners Â· Class Mean ${overallMean.toFixed(1)}%</p>
+          <p style="text-align:center;font-size:11px;color:var(--navy-soft);margin:4px 0 4px;">CLASS PERFORMANCE REPORT \u2014 SUBJECT ANALYSIS</p>
+          <p style="text-align:center;font-size:12px;margin:0 0 16px;"><b>${esc(state.className)}</b> \u2014 ${esc(asm.name)} \u00b7 ${rows.length} learners \u00b7 Class Mean ${overallMean.toFixed(1)}%</p>
 
           <p style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--navy-soft);margin-bottom:6px;">Mean Subject Scores (MSS)</p>
           <table style="font-size:11px;">
@@ -2404,8 +2451,8 @@ function openClassReport(){
           </table>
         </div>
 
-        <div style="font-size:11px;color:var(--navy-soft);text-align:center;margin:20px 0 14px;">â€” ${esc(state.className.toUpperCase())} MARK LIST â€”</div>
-        <p style="text-align:center;font-size:11px;font-weight:700;margin:0 0 10px;">BOSIANGO COMPREHENSIVE SCHOOL â€” ${esc(state.className)} MARK LIST Â· ${esc(asm.name)}</p>
+        <div style="font-size:11px;color:var(--navy-soft);text-align:center;margin:20px 0 14px;">\u2014 ${esc(state.className.toUpperCase())} MARK LIST \u2014</div>
+        <p style="text-align:center;font-size:11px;font-weight:700;margin:0 0 10px;">BOSIANGO COMPREHENSIVE SCHOOL \u2014 ${esc(state.className)} MARK LIST \u00b7 ${esc(asm.name)}</p>
         <div style="overflow-x:auto;">
         <table style="font-size:9px;min-width:1000px;">
           <thead>
@@ -2425,7 +2472,7 @@ function openClassReport(){
         </div>
 
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;font-size:12px;padding-top:16px;margin-top:20px;border-top:1px solid var(--navy-line);align-items:end;">
-          <div><b style="color:var(--navy-soft);">CLASS TEACHER: </b>${esc(state.classTeacher||"â€”")}</div>
+          <div><b style="color:var(--navy-soft);">CLASS TEACHER: </b>${esc(state.classTeacher||"\u2014")}</div>
           <div><b style="color:var(--navy-soft);">SIGN: </b>________________</div>
           <div style="text-align:right;">
             <div style="border:1px dashed var(--navy-line);border-radius:6px;width:110px;height:70px;margin-left:auto;display:flex;align-items:center;justify-content:center;color:var(--navy-soft);font-size:9px;text-transform:uppercase;letter-spacing:0.5px;">School Stamp</div>
@@ -2452,7 +2499,7 @@ function renderNav(){
 }
 function render(){
   renderNav();
-  document.getElementById("headerSubtitle").textContent = "BOSIANGO 2026 Assessment â€” " + state.className;
+  document.getElementById("headerSubtitle").textContent = "BOSIANGO 2026 Assessment \u2014 " + state.className;
   document.getElementById("gradeSelectorRow").innerHTML = `
     <label style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--navy-soft);margin-right:8px;">Grade</label>
     <select onchange="switchGrade(this.value)" style="font-weight:700;">
@@ -2472,8 +2519,8 @@ function render(){
   else { logoImg.style.display="none"; logoPh.style.display="block"; }
 }
 function persistAndRender(){ scheduleSave(); render(); }
-// Updates just the "X of Y entered Â· class average Z%" line on the Entry
-// tab without touching the input rows themselves â€” used so committing
+// Updates just the "X of Y entered \u00b7 class average Z%" line on the Entry
+// tab without touching the input rows themselves \u2014 used so committing
 // one mark doesn't force a full-page rebuild (recompute ranks, redraw
 // both charts, rebuild every row) each time, which is what made mark
 // entry feel slow on bigger classes.
@@ -2496,7 +2543,7 @@ function refreshEntrySummary(){
     if(val!==undefined && val!==null && val!==""){ filled++; sum+=Number(val); count++; }
   });
   const avg = count ? (sum/count).toFixed(1) : null;
-  el.textContent = `${filled} of ${state.students.length} entered${avg!==null ? " Â· class average "+avg+"%" : ""}`;
+  el.textContent = `${filled} of ${state.students.length} entered${avg!==null ? " \u00b7 class average "+avg+"%" : ""}`;
   return true;
 }
 
@@ -2539,7 +2586,7 @@ document.getElementById("importInput").addEventListener("change", e => {
    INIT
 ========================================================= */
 /* =========================================================
-   APP LOCK â€” a soft screen-lock stored only on this device.
+   APP LOCK \u2014 a soft screen-lock stored only on this device.
    Keeps casual browsers (students, parents) out; not strong
    security, since the sync connection details live in this
    same file either way.
@@ -2598,7 +2645,7 @@ function removeAppLock(){
   const current = getLockPassword();
   if(!current){ showAlert("No app lock is currently set."); return; }
   showInput("Remove App Lock", "Enter current password to confirm", (pw) => {
-    if(pw !== current){ showAlert("Incorrect password â€” app lock not removed."); return; }
+    if(pw !== current){ showAlert("Incorrect password \u2014 app lock not removed."); return; }
     clearLockPassword();
     render();
     showAlert("App lock removed from this device.");
