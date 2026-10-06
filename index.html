@@ -1752,7 +1752,7 @@ function renderRoster(){
     <p class="small-note">${state.students.length} students \u00b7 ${state.assessments.length} assessment${state.assessments.length===1?"":"s"} recorded</p>
     <div class="grid-cards">${cards}</div>
     <div style="margin-top:30px;padding-top:20px;border-top:1px solid var(--navy-line);">
-      <h3 style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--navy-soft);margin:0 0 10px;">Subject Teachers</h3>
+      <h3 style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--navy-soft);margin:0 0 10px;">Learning Area Teachers</h3>
       <div class="subject-teacher-grid">${teacherRows}</div>
     </div>
     <div style="margin-top:30px;padding-top:20px;border-top:1px solid var(--navy-line);">
@@ -1825,7 +1825,7 @@ function renderEntry(){
   return `
     <div class="row" style="align-items:flex-end;margin-bottom:20px;">
       <div><label class="field-label">Assessment</label><select onchange="ui.selectedAssessmentId=this.value; render();">${asmOptions}</select></div>
-      <div><label class="field-label">I'm entering marks for</label><select onchange="ui.mySubject=this.value; render();">${subjOptions}</select></div>
+      <div><label class="field-label">I'm entering marks for (Learning Area)</label><select onchange="ui.mySubject=this.value; render();">${subjOptions}</select></div>
       <div><label class="field-label">Teacher name</label>
         <input type="text" value="${esc(state.subjectTeachers[ui.mySubject]||"")}" placeholder="Your name"
           onchange="setSubjectTeacher('${ui.mySubject.replace(/'/g,"\\'")}', this.value);"></div>
@@ -1888,7 +1888,7 @@ function renderAssessment(){
     return `<tr class="${idx%2?'zebra':''}" style="cursor:pointer;" onclick="ui.expandedStudent = ui.expandedStudent==='${r.studentId}'?null:'${r.studentId}'; render();">
         <td>${positionBadge(r.position, rows.length)}</td>
         <td style="border-left:2px solid var(--navy);"><div style="display:flex;align-items:center;gap:8px;">${avatarHTML(r.photo, r.name, 24)}<span style="font-weight:600;">${esc(r.name)}</span></div></td>
-        <td style="text-align:right;font-weight:600;border-left:2px solid var(--navy);">${r.totalMarks||0}</td>
+        <td style="text-align:right;font-weight:600;border-left:2px solid var(--navy);">${r.totalMarks||0}/${SUBJECTS.length*100}</td>
         <td style="text-align:right;font-weight:600;border-left:2px solid var(--navy);">${r.totalPoints||0}/${SUBJECTS.length*8}</td>
         <td style="text-align:right;color:var(--navy-soft);border-left:1px solid var(--navy-line);">${r.avgPoints!==null?r.avgPoints.toFixed(2):"\u2014"}</td>
         <td style="text-align:center;border-left:2px solid var(--navy);">${gradePill(r.grade)}</td>
@@ -1899,7 +1899,7 @@ function renderAssessment(){
   return header + `
     <div style="display:grid;grid-template-columns:1fr;gap:14px;margin:20px 0;" class="two-col">
       <div class="chart-card"><h3>Class ranking \u2014 total marks</h3>${barChart(rankData,"name","marks")}</div>
-      <div class="chart-card"><h3>Class average by subject (%)</h3>${barChart(subjData,"subject","avg",100, v=>v+"%")}</div>
+      <div class="chart-card"><h3>Class average by learning area (%)</h3>${barChart(subjData,"subject","avg",100, v=>v+"%")}</div>
     </div>
     <div style="border:1px solid var(--navy-line);border-radius:2px;overflow-x:auto;">
       <table>
@@ -1939,7 +1939,7 @@ function renderTerms(){
     const trows = sortedTermRows.map((r,idx) => `<tr class="${idx%2?'zebra':''}">
       <td>${positionBadge(r.position, rows.length)}</td>
       <td style="border-left:2px solid var(--navy);"><div style="display:flex;align-items:center;gap:8px;">${avatarHTML(r.photo,r.name,22)}<span style="font-weight:600;">${esc(r.name)}</span></div></td>
-      <td style="text-align:right;font-weight:600;border-left:2px solid var(--navy);">${r.totalMarks||0}</td>
+      <td style="text-align:right;font-weight:600;border-left:2px solid var(--navy);">${r.totalMarks||0}/${SUBJECTS.length*100}</td>
       <td style="text-align:right;font-weight:600;border-left:2px solid var(--navy);">${r.totalPoints||0}/${SUBJECTS.length*8}</td>
       <td style="text-align:right;color:var(--navy-soft);border-left:1px solid var(--navy-line);">${r.avgPoints!==null?r.avgPoints.toFixed(2):"\u2014"}</td>
       <td style="text-align:center;border-left:2px solid var(--navy);">${gradePill(r.grade)}</td>
@@ -2069,7 +2069,7 @@ function renderCompare(){
       <tbody>${movementRows}</tbody></table>
     </div>
 
-    <h3 style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--navy-soft);margin:24px 0 10px;">Average Performance \u2014 Ranked (per subject)</h3>
+    <h3 style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--navy-soft);margin:24px 0 10px;">Average Performance \u2014 Ranked (per Learning Area)</h3>
     <p class="small-note">Each subject shown here is the average of that subject across both assessments, then ranked as its own result \u2014 not just an average of the two totals.</p>
     <div class="row" style="margin-bottom:10px;">
       <button class="btn outline sm" onclick="openAverageReport()">${icon("download",14)} Download Average Report</button>
@@ -2104,7 +2104,7 @@ function buildStudentReportCardHTML(studentId, opts){
       <td style="text-align:center;">${p.pct===null?"\u2014":p.pct}</td>
       <td style="text-align:center;color:var(--navy-soft);">${classAvg!==undefined?classAvg.toFixed(1):"\u2014"}</td>
       <td style="text-align:center;">${p.points===null?"\u2014":p.points}</td>
-      <td style="text-align:center;">${LEVEL_NUM[band]}</td>
+      <td style="text-align:center;">${band}</td>
       <td>${remarkSet[band]}</td>
       <td>${esc(state.subjectTeachers[p.subject]||"\u2014")}</td>
     </tr>`;
@@ -2130,11 +2130,11 @@ function buildStudentReportCardHTML(studentId, opts){
         </div>
         <p style="font-size:9px;color:var(--navy-soft);margin-bottom:10px;">POINTS SCALE: 90-100=8(EE) | 75-89=7(EE) | 58-74=6(ME) | 41-57=5(ME) | 31-40=4(AE) | 21-30=3(AE) | 11-20=2(BE) | 1-10=1(BE)</p>
         <table style="margin-bottom:14px;font-size:10.5px;">
-          <thead><tr><th>SUBJECT</th><th style="text-align:center;">MARKS (%)</th><th style="text-align:center;">CLASS AVG</th><th style="text-align:center;">POINTS</th><th style="text-align:center;">LEVEL</th><th>REMARK</th><th>TEACHER</th></tr></thead>
+          <thead><tr><th>LEARNING AREA</th><th style="text-align:center;">MARKS (%)</th><th style="text-align:center;">CLASS AVG</th><th style="text-align:center;">POINTS</th><th style="text-align:center;">LEVEL</th><th>REMARK</th><th>TEACHER</th></tr></thead>
           <tbody>
             ${subjRows}
             <tr style="border-top:1px solid var(--navy);font-weight:700;">
-              <td>TOTAL</td><td style="text-align:center;">${row.totalMarks}</td><td></td><td style="text-align:center;">${row.totalPoints}/${SUBJECTS.length*8}</td><td></td><td></td><td></td>
+              <td>TOTAL</td><td style="text-align:center;">${row.totalMarks}/${SUBJECTS.length*100}</td><td></td><td style="text-align:center;">${row.totalPoints}/${SUBJECTS.length*8}</td><td></td><td></td><td></td>
             </tr>
             <tr style="font-weight:700;">
               <td>AVERAGE (%)</td><td style="text-align:center;">${avgMarks.toFixed(1)}</td><td></td><td></td><td></td><td></td><td></td>
@@ -2144,7 +2144,7 @@ function buildStudentReportCardHTML(studentId, opts){
             </tr>
           </tbody>
         </table>
-        <p style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--navy-soft);margin-bottom:8px;">Subject Performance</p>
+        <p style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--navy-soft);margin-bottom:8px;">Learning Area Performance</p>
         <div class="chart-card">${barChart(chartData,"subject","marks",100,v=>v+"%")}</div>
         <p style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--navy-soft);margin:16px 0 4px;">Class Teacher's Comment</p>
         <p style="font-size:13px;font-style:italic;margin:0 0 20px;">${esc(comment)}</p>
@@ -2237,6 +2237,16 @@ function openAverageReport(){
   const rows = computeAveragedRows(state.students, asmA, asmB);
   const sortedRows = [...rows].sort((a,b)=>a.position-b.position);
   const avgs = classAverages(rows);
+  // Individual positions in each compared assessment, so we can show how
+  // much each learner's rank moved between them ("deviation").
+  const rowsA = computeRows(state.students, asmA);
+  const rowsB = computeRows(state.students, asmB);
+  const posDeviation = (studentId) => {
+    const pa = rowsA.find(r=>r.studentId===studentId);
+    const pb = rowsB.find(r=>r.studentId===studentId);
+    if(!pa || !pb) return null;
+    return pa.position - pb.position; // positive = improved (moved to a lower position number)
+  };
   // Subjects ordered best-performed to worst, by class mean %, so the
   // Subject Analysis table and the mark-list columns both read strongest
   // to weakest left-to-right instead of the fixed curriculum order.
@@ -2268,14 +2278,17 @@ function openAverageReport(){
       const pts = p && p.points!==null && p.points!==undefined ? p.points : "\u2014";
       return `<td style="text-align:center;border-left:2px solid var(--navy);">${pct}</td><td style="text-align:center;border-left:1px solid var(--navy-line);">${pts}</td>`;
     }).join("");
+    const dev = posDeviation(r.studentId);
+    const devText = dev===null ? "\u2014" : (dev>0 ? `+${dev}` : `${dev}`);
     return `<tr style="border-bottom:1px solid var(--navy-line);">
       <td style="text-align:center;">${idx+1}</td>
       <td style="border-left:2px solid var(--navy);">${esc(r.name)}</td>
       ${subjCells}
-      <td style="text-align:center;font-weight:700;border-left:2px solid var(--navy);">${r.totalMarks}</td>
+      <td style="text-align:center;font-weight:700;border-left:2px solid var(--navy);">${r.totalMarks}/${SUBJECTS.length*100}</td>
       <td style="text-align:center;font-weight:700;">${r.totalPoints}/${SUBJECTS.length*8}</td>
       <td style="text-align:center;">${r.avgPoints!==null?r.avgPoints.toFixed(2):"\u2014"}</td>
       <td style="text-align:center;font-weight:700;">${r.position}</td>
+      <td style="text-align:center;font-weight:700;border-left:1px solid var(--navy-line);">${devText}</td>
     </tr>`;
   }).join("");
 
@@ -2298,9 +2311,9 @@ function openAverageReport(){
           <p style="text-align:center;font-size:11px;color:var(--navy-soft);margin:4px 0 4px;">AVERAGE PERFORMANCE REPORT \u2014 SUBJECT ANALYSIS</p>
           <p style="text-align:center;font-size:12px;margin:0 0 16px;"><b>${esc(state.className)}</b> \u2014 Average of ${esc(asmA.name)} &amp; ${esc(asmB.name)} \u00b7 ${rows.length} learners \u00b7 Class Mean ${overallMean.toFixed(1)}%</p>
 
-          <p style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--navy-soft);margin-bottom:6px;">Mean Subject Scores (MSS)</p>
+          <p style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--navy-soft);margin-bottom:6px;">Mean Learning Area Scores (MSS)</p>
           <table style="font-size:11px;">
-            <thead><tr><th>SUBJECT</th><th style="text-align:center;">MEAN (%)</th><th style="text-align:center;">MEAN PTS</th><th style="text-align:center;">GRADE</th><th style="text-align:center;">HIGH</th><th style="text-align:center;">LOW</th></tr></thead>
+            <thead><tr><th>LEARNING AREA</th><th style="text-align:center;">MEAN (%)</th><th style="text-align:center;">MEAN PTS</th><th style="text-align:center;">GRADE</th><th style="text-align:center;">HIGH</th><th style="text-align:center;">LOW</th></tr></thead>
             <tbody>${mssRows}</tbody>
           </table>
         </div>
@@ -2314,16 +2327,19 @@ function openAverageReport(){
               <th rowspan="2" style="text-align:center;">NO.</th>
               <th rowspan="2" style="border-left:2px solid var(--navy);">NAME</th>
               ${subjHeaderCells}
-              <th rowspan="2" style="text-align:center;">TOTAL<br>MARKS</th>
+              <th rowspan="2" style="text-align:center;">TOTAL<br>MARKS <span style="font-weight:400;font-size:8px;">/${SUBJECTS.length*100}</span></th>
               <th rowspan="2" style="text-align:center;">TOTAL<br>POINTS <span style="font-weight:400;font-size:8px;">/${SUBJECTS.length*8}</span></th>
               <th rowspan="2" style="text-align:center;">POINT<br>AVE</th>
               <th rowspan="2" style="text-align:center;">POS</th>
+              <th rowspan="2" style="text-align:center;border-left:1px solid var(--navy-line);">DEVIATION</th>
             </tr>
             <tr>${subjSubHeaderCells}</tr>
           </thead>
           <tbody>${classRows}</tbody>
         </table>
         </div>
+
+        <p style="font-size:9px;color:var(--navy-soft);margin:6px 0 0;">DEVIATION: change in class position from ${esc(asmA.name)} to ${esc(asmB.name)} (+ means improved rank, \u2212 means dropped).</p>
 
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:12px;padding-top:16px;margin-top:20px;border-top:1px solid var(--navy-line);">
           <div><b style="color:var(--navy-soft);">CLASS TEACHER: </b>${esc(state.classTeacher||"\u2014")}</div>
@@ -2363,6 +2379,19 @@ function openClassReport(){
 
   const overallMean = rows.length ? (rows.reduce((a,r)=>a+(r.totalMarks||0),0) / rows.length / SUBJECTS.length) : 0;
 
+  // Best learner per learning area \u2014 whoever scored highest in each
+  // subject for this assessment (ties are all listed together).
+  const bestLearnerRows = rankedSubjects.map(subj => {
+    const vals = rows.map(r => {
+      const p = r.perSubject.find(x=>x.subject===subj);
+      return p && p.pct!==null && p.pct!==undefined ? {name:r.name, pct:Number(p.pct)} : null;
+    }).filter(Boolean);
+    if(!vals.length) return `<tr><td>${subj}</td><td colspan="2" style="text-align:center;color:var(--navy-soft);">No scores recorded</td></tr>`;
+    const top = Math.max(...vals.map(v=>v.pct));
+    const winners = vals.filter(v=>v.pct===top).map(v=>esc(v.name)).join(", ");
+    return `<tr><td>${subj}</td><td>${winners}</td><td style="text-align:center;">${top}</td></tr>`;
+  }).join("");
+
   // Traditional mark-list layout: NO follows the original roster order (like
   // your paper mark list), POS at the far right shows the computed rank.
   const sortedClassRows = [...rows].sort((a,b)=>a.position-b.position);
@@ -2377,7 +2406,7 @@ function openClassReport(){
       <td style="text-align:center;">${idx+1}</td>
       <td style="border-left:2px solid var(--navy);">${esc(r.name)}</td>
       ${subjCells}
-      <td style="text-align:center;font-weight:700;border-left:2px solid var(--navy);">${r.totalMarks}</td>
+      <td style="text-align:center;font-weight:700;border-left:2px solid var(--navy);">${r.totalMarks}/${SUBJECTS.length*100}</td>
       <td style="text-align:center;font-weight:700;">${r.totalPoints}/${SUBJECTS.length*8}</td>
       <td style="text-align:center;">${r.avgPoints!==null?r.avgPoints.toFixed(2):"\u2014"}</td>
       <td style="text-align:center;font-weight:700;">${r.position}</td>
@@ -2444,10 +2473,16 @@ function openClassReport(){
           <p style="text-align:center;font-size:11px;color:var(--navy-soft);margin:4px 0 4px;">CLASS PERFORMANCE REPORT \u2014 SUBJECT ANALYSIS</p>
           <p style="text-align:center;font-size:12px;margin:0 0 16px;"><b>${esc(state.className)}</b> \u2014 ${esc(asm.name)} \u00b7 ${rows.length} learners \u00b7 Class Mean ${overallMean.toFixed(1)}%</p>
 
-          <p style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--navy-soft);margin-bottom:6px;">Mean Subject Scores (MSS)</p>
+          <p style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--navy-soft);margin-bottom:6px;">Mean Learning Area Scores (MSS)</p>
           <table style="font-size:11px;">
-            <thead><tr><th>SUBJECT</th><th style="text-align:center;">MEAN (%)</th><th style="text-align:center;">MEAN PTS</th><th style="text-align:center;">GRADE</th><th style="text-align:center;">HIGH</th><th style="text-align:center;">LOW</th></tr></thead>
+            <thead><tr><th>LEARNING AREA</th><th style="text-align:center;">MEAN (%)</th><th style="text-align:center;">MEAN PTS</th><th style="text-align:center;">GRADE</th><th style="text-align:center;">HIGH</th><th style="text-align:center;">LOW</th></tr></thead>
             <tbody>${mssRows}</tbody>
+          </table>
+
+          <p style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--navy-soft);margin:16px 0 6px;">Best Learner per Learning Area</p>
+          <table style="font-size:11px;">
+            <thead><tr><th>LEARNING AREA</th><th>BEST LEARNER</th><th style="text-align:center;">SCORE (%)</th></tr></thead>
+            <tbody>${bestLearnerRows}</tbody>
           </table>
         </div>
 
@@ -2460,7 +2495,7 @@ function openClassReport(){
               <th rowspan="2" style="text-align:center;">NO.</th>
               <th rowspan="2" style="border-left:2px solid var(--navy);">NAME</th>
               ${subjHeaderCells}
-              <th rowspan="2" style="text-align:center;">TOTAL<br>MARKS</th>
+              <th rowspan="2" style="text-align:center;">TOTAL<br>MARKS <span style="font-weight:400;font-size:8px;">/${SUBJECTS.length*100}</span></th>
               <th rowspan="2" style="text-align:center;">TOTAL<br>POINTS <span style="font-weight:400;font-size:8px;">/${SUBJECTS.length*8}</span></th>
               <th rowspan="2" style="text-align:center;">POINT<br>AVE</th>
               <th rowspan="2" style="text-align:center;">POS</th>
