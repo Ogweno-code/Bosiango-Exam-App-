@@ -643,7 +643,10 @@ function docxTableXml(table){
     });
     const fixedEntries = plan.filter(e=>e.fixed);
     const subjectSubCols = plan.filter(e=>!e.fixed).reduce((a,e)=>a+e.span, 0) || 1;
-    const noW = 500, nameW = 1700, summaryColW = 950;
+    // Totals no longer repeat "/800"/"/64" on every row (that only
+    // needs to appear once, in the header) \u2014 the freed-up width goes
+    // straight to the learner's NAME column instead.
+    const noW = 500, nameW = 2300, summaryColW = 650;
     const trailingCount = Math.max(0, fixedEntries.length - 2);
     const usedByFixed = noW + nameW + summaryColW * trailingCount;
     const restW = Math.max(350, Math.floor((usableWidthTwips - usedByFixed) / subjectSubCols));
@@ -1944,8 +1947,8 @@ function renderAssessment(){
     return `<tr class="${idx%2?'zebra':''}" style="cursor:pointer;" onclick="ui.expandedStudent = ui.expandedStudent==='${r.studentId}'?null:'${r.studentId}'; render();">
         <td>${positionBadge(r.position, rows.length)}</td>
         <td style="border-left:2px solid var(--navy);"><div style="display:flex;align-items:center;gap:8px;">${avatarHTML(r.photo, r.name, 24)}<span style="font-weight:600;">${esc(r.name)}</span></div></td>
-        <td style="text-align:right;font-weight:600;border-left:2px solid var(--navy);">${r.totalMarks||0}/${SUBJECTS.length*100}</td>
-        <td style="text-align:right;font-weight:600;border-left:2px solid var(--navy);">${r.totalPoints||0}/${SUBJECTS.length*8}</td>
+        <td style="text-align:right;font-weight:600;border-left:2px solid var(--navy);">${r.totalMarks||0}</td>
+        <td style="text-align:right;font-weight:600;border-left:2px solid var(--navy);">${r.totalPoints||0}</td>
         <td style="text-align:right;color:var(--navy-soft);border-left:1px solid var(--navy-line);">${r.avgPoints!==null?r.avgPoints.toFixed(2):"\u2014"}</td>
         <td style="text-align:center;border-left:2px solid var(--navy);">${gradePill(r.grade)}</td>
         <td style="text-align:center;">${expanded?icon("chevronDown",14):icon("chevronRight",14)}</td>
@@ -1959,7 +1962,7 @@ function renderAssessment(){
     </div>
     <div style="border:1px solid var(--navy-line);border-radius:2px;overflow-x:auto;">
       <table>
-        <thead><tr><th style="width:30px;">Pos</th><th style="border-left:2px solid var(--navy);">Student</th><th style="text-align:right;border-left:2px solid var(--navy);">Total Marks</th><th style="text-align:right;border-left:2px solid var(--navy);">Total Points</th><th style="text-align:right;border-left:1px solid var(--navy-line);">Avg pts</th><th style="text-align:center;border-left:2px solid var(--navy);">Grade</th><th style="width:20px;"></th></tr></thead>
+        <thead><tr><th style="width:30px;">Pos</th><th style="border-left:2px solid var(--navy);">Student</th><th style="text-align:right;border-left:2px solid var(--navy);">Total Marks <span style="font-weight:400;font-size:10px;">/${SUBJECTS.length*100}</span></th><th style="text-align:right;border-left:2px solid var(--navy);">Total Points <span style="font-weight:400;font-size:10px;">/${SUBJECTS.length*8}</span></th><th style="text-align:right;border-left:1px solid var(--navy-line);">Avg pts</th><th style="text-align:center;border-left:2px solid var(--navy);">Grade</th><th style="width:20px;"></th></tr></thead>
         <tbody>${tableRows}</tbody>
       </table>
     </div>`;
@@ -1995,15 +1998,15 @@ function renderTerms(){
     const trows = sortedTermRows.map((r,idx) => `<tr class="${idx%2?'zebra':''}">
       <td>${positionBadge(r.position, rows.length)}</td>
       <td style="border-left:2px solid var(--navy);"><div style="display:flex;align-items:center;gap:8px;">${avatarHTML(r.photo,r.name,22)}<span style="font-weight:600;">${esc(r.name)}</span></div></td>
-      <td style="text-align:right;font-weight:600;border-left:2px solid var(--navy);">${r.totalMarks||0}/${SUBJECTS.length*100}</td>
-      <td style="text-align:right;font-weight:600;border-left:2px solid var(--navy);">${r.totalPoints||0}/${SUBJECTS.length*8}</td>
+      <td style="text-align:right;font-weight:600;border-left:2px solid var(--navy);">${r.totalMarks||0}</td>
+      <td style="text-align:right;font-weight:600;border-left:2px solid var(--navy);">${r.totalPoints||0}</td>
       <td style="text-align:right;color:var(--navy-soft);border-left:1px solid var(--navy-line);">${r.avgPoints!==null?r.avgPoints.toFixed(2):"\u2014"}</td>
       <td style="text-align:center;border-left:2px solid var(--navy);">${gradePill(r.grade)}</td>
       <td style="text-align:center;"><button style="background:none;border:none;cursor:pointer;color:var(--navy-soft);" onclick="openReport('${r.studentId}')" title="Download report">${icon("download",14)}</button></td>
     </tr>`).join("");
     termSection = `<div style="border:1px solid var(--navy-line);border-radius:2px;overflow-x:auto;margin-bottom:30px;">
       <p style="font-size:11px;color:var(--navy-soft);padding:10px 10px 0;">${esc(termAsm.name)} \u00b7 ${rows.length} learners</p>
-      <table style="margin-top:6px;"><thead><tr><th style="width:30px;">Pos</th><th style="border-left:2px solid var(--navy);">Student</th><th style="text-align:right;border-left:2px solid var(--navy);">Total Marks</th><th style="text-align:right;border-left:2px solid var(--navy);">Total Points</th><th style="text-align:right;border-left:1px solid var(--navy-line);">Avg pts</th><th style="text-align:center;border-left:2px solid var(--navy);">Grade</th><th style="width:20px;"></th></tr></thead>
+      <table style="margin-top:6px;"><thead><tr><th style="width:30px;">Pos</th><th style="border-left:2px solid var(--navy);">Student</th><th style="text-align:right;border-left:2px solid var(--navy);">Total Marks <span style="font-weight:400;font-size:10px;">/${SUBJECTS.length*100}</span></th><th style="text-align:right;border-left:2px solid var(--navy);">Total Points <span style="font-weight:400;font-size:10px;">/${SUBJECTS.length*8}</span></th><th style="text-align:right;border-left:1px solid var(--navy-line);">Avg pts</th><th style="text-align:center;border-left:2px solid var(--navy);">Grade</th><th style="width:20px;"></th></tr></thead>
       <tbody>${trows}</tbody></table></div>`;
   }
 
@@ -2340,8 +2343,8 @@ function openAverageReport(){
       <td style="text-align:center;">${idx+1}</td>
       <td style="border-left:2px solid var(--navy);">${esc(r.name)}</td>
       ${subjCells}
-      <td style="text-align:center;font-weight:700;border-left:2px solid var(--navy);">${r.totalMarks}/${SUBJECTS.length*100}</td>
-      <td style="text-align:center;font-weight:700;">${r.totalPoints}/${SUBJECTS.length*8}</td>
+      <td style="text-align:center;font-weight:700;border-left:2px solid var(--navy);">${r.totalMarks}</td>
+      <td style="text-align:center;font-weight:700;">${r.totalPoints}</td>
       <td style="text-align:center;">${r.avgPoints!==null?r.avgPoints.toFixed(2):"\u2014"}</td>
       <td style="text-align:center;font-weight:700;">${r.position}</td>
       <td style="text-align:center;font-weight:700;border-left:1px solid var(--navy-line);">${devText}</td>
@@ -2462,8 +2465,8 @@ function openClassReport(){
       <td style="text-align:center;">${idx+1}</td>
       <td style="border-left:2px solid var(--navy);">${esc(r.name)}</td>
       ${subjCells}
-      <td style="text-align:center;font-weight:700;border-left:2px solid var(--navy);">${r.totalMarks}/${SUBJECTS.length*100}</td>
-      <td style="text-align:center;font-weight:700;">${r.totalPoints}/${SUBJECTS.length*8}</td>
+      <td style="text-align:center;font-weight:700;border-left:2px solid var(--navy);">${r.totalMarks}</td>
+      <td style="text-align:center;font-weight:700;">${r.totalPoints}</td>
       <td style="text-align:center;">${r.avgPoints!==null?r.avgPoints.toFixed(2):"\u2014"}</td>
       <td style="text-align:center;font-weight:700;">${r.position}</td>
     </tr>`;
