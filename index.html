@@ -614,15 +614,41 @@ function docxTableXml(table){
   // cells, makes rows drift out of alignment with each other. A fixed
   // <w:tblGrid> (mark-list tables get a wider NO/NAME pair, everything
   // else equal) keeps every row honestly lined up.
-  const usableWidthTwips = 14000;
+  // Landscape A4 with 720-twip margins each side gives ~15400 usable
+  // twips \u2014 use nearly all of it for wide roster-style tables.
   const firstCellText = (rows[0] && rows[0].children[0] ? rows[0].children[0].textContent.trim().toUpperCase() : "");
   const isRosterStyle = firstCellText === "NO." && totalCols > 2;
+  const usableWidthTwips = isRosterStyle ? 15300 : 14000;
+  // Word's default ~11pt font is far too large for a 20+ column mark
+  // list \u2014 a small, fixed size (half-points: 16 = 8pt) is what actually
+  // lets these narrow columns hold "KISWAHILI"/"MATHEMATICS" etc. without
+  // Word breaking mid-word to make them fit.
+  const fontHalfPts = isRosterStyle ? 16 : 20;
   let colWidths;
   if(isRosterStyle){
-    const noW = 500, nameW = 1800;
-    const rest = totalCols - 2;
-    const restW = Math.max(300, Math.floor((usableWidthTwips - noW - nameW) / rest));
-    colWidths = [noW, nameW, ...Array(rest).fill(restW)];
+    // Figure out which columns are the narrow repeating "%"/"P" subject
+    // pairs versus the wider single fixed columns (NO, NAME, TOTAL
+    // MARKS, TOTAL POINTS, POINT AVE, POS, DEVIATION \u2014 anything with
+    // rowspan="2" in the top header row) directly from the header
+    // structure, so wide content like "400/800" gets real room instead
+    // of the same cramped width as a 2-digit subject score.
+    const row1cells = Array.from(rows[0].children);
+    let colPtr = 0;
+    const plan = [];
+    row1cells.forEach(cell => {
+      const span = parseInt(cell.getAttribute("colspan")||"1", 10);
+      const rowspan = parseInt(cell.getAttribute("rowspan")||"1", 10);
+      plan.push({startCol: colPtr, span, fixed: rowspan>1});
+      colPtr += span;
+    });
+    const fixedEntries = plan.filter(e=>e.fixed);
+    const subjectSubCols = plan.filter(e=>!e.fixed).reduce((a,e)=>a+e.span, 0) || 1;
+    const noW = 500, nameW = 1700, summaryColW = 950;
+    const trailingCount = Math.max(0, fixedEntries.length - 2);
+    const usedByFixed = noW + nameW + summaryColW * trailingCount;
+    const restW = Math.max(350, Math.floor((usableWidthTwips - usedByFixed) / subjectSubCols));
+    colWidths = Array(totalCols).fill(restW);
+    fixedEntries.forEach((e, i) => { colWidths[e.startCol] = i===0 ? noW : (i===1 ? nameW : summaryColW); });
   } else {
     const eachW = Math.floor(usableWidthTwips / totalCols);
     colWidths = Array(totalCols).fill(eachW);
@@ -641,7 +667,7 @@ function docxTableXml(table){
       if(pending[col] && pending[col].remaining>0){
         const span = pending[col].span;
         const w = colWidths.slice(col, col+span).reduce((a,b)=>a+b, 0);
-        rowXml += `<w:tc><w:tcPr><w:tcW w:w="${w}" w:type="dxa"/>`+(span>1?`<w:gridSpan w:val="${span}"/>`:"")+'<w:vMerge/><w:shd w:val="clear" w:fill="FFFFFF"/></w:tcPr><w:p/></w:tc>';
+        rowXml += `<w:tc><w:tcPr><w:tcW w:w="${w}" w:type="dxa"/>`+(span>1?`<w:gridSpan w:val="${span}"/>`:"")+'<w:noWrap/><w:vMerge/><w:shd w:val="clear" w:fill="FFFFFF"/></w:tcPr><w:p/></w:tc>';
         pending[col].remaining -= 1;
         col += span;
         continue;
@@ -652,11 +678,18 @@ function docxTableXml(table){
       const span = parseInt(cell.getAttribute("colspan")||"1", 10);
       const rowspan = parseInt(cell.getAttribute("rowspan")||"1", 10);
       const bold = docxCellIsBold(cell);
-      const text = escXml(cell.textContent.trim());
+      // Headers like "TOTAL<br>MARKS" must become "TOTAL MARKS", not
+      // "TOTALMARKS" \u2014 textContent alone drops the <br> entirely.
+      const cellForText = cell.cloneNode(true);
+      cellForText.querySelectorAll("br").forEach(br => br.replaceWith(" "));
+      const text = escXml(cellForText.textContent.trim().replace(/\s+/g," "));
       const w = colWidths.slice(col, col+span).reduce((a,b)=>a+b, 0);
       const vMergeTag = rowspan>1 ? "<w:vMerge w:val=\"restart\"/>" : "";
-      rowXml += `<w:tc><w:tcPr><w:tcW w:w="${w}" w:type="dxa"/>`+(span>1?`<w:gridSpan w:val="${span}"/>`:"")+vMergeTag+'<w:shd w:val="clear" w:fill="FFFFFF"/></w:tcPr>'+
-        `<w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r>${bold?"<w:rPr><w:b/></w:rPr>":""}<w:t xml:space="preserve">${text}</w:t></w:r></w:p></w:tc>`;
+      // <w:noWrap/> stops Word from breaking a word mid-letter to force
+      // it into a narrow cell \u2014 the same job white-space:nowrap does
+      // in the PDF/HTML version of this table.
+      rowXml += `<w:tc><w:tcPr><w:tcW w:w="${w}" w:type="dxa"/>`+(span>1?`<w:gridSpan w:val="${span}"/>`:"")+vMergeTag+'<w:noWrap/><w:shd w:val="clear" w:fill="FFFFFF"/></w:tcPr>'+
+        `<w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:rPr>${bold?"<w:b/>":""}<w:sz w:val="${fontHalfPts}"/></w:rPr><w:t xml:space="preserve">${text}</w:t></w:r></w:p></w:tc>`;
       if(rowspan>1) pending[col] = {remaining: rowspan-1, span};
       col += span;
     }
@@ -702,7 +735,15 @@ async function downloadReportWord(filenameBase, btnEl){
     const clone = node.cloneNode(true);
     clone.querySelectorAll(".no-print").forEach(el => el.remove());
     const xmlParts = [];
-    Array.from(clone.children).forEach(child => docxWalkBlock(child, xmlParts));
+    Array.from(clone.children).forEach(child => {
+      docxWalkBlock(child, xmlParts);
+      // Mirror the PDF's page split: Subject Analysis (+ Best Learner)
+      // ends its own page here, so the Mark List always starts fresh on
+      // the next one instead of Word auto-wrapping mid-table.
+      if(child.classList && child.classList.contains("print-page-break")){
+        xmlParts.push('<w:p><w:r><w:br w:type="page"/></w:r></w:p>');
+      }
+    });
     const bodyXml = xmlParts.join("");
 
     const zip = new JSZipLib();
