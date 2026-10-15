@@ -398,15 +398,17 @@ function pointsForPct(pct){
 }
 function overallGrade(avgPoints){
   if(avgPoints===null||avgPoints===undefined||Number.isNaN(avgPoints)) return "-";
+  // 4 points counts as Meeting Expectation (ME), not Approaching (AE).
   if(avgPoints>=7) return "EE";
-  if(avgPoints>=5) return "ME";
+  if(avgPoints>=4) return "ME";
   if(avgPoints>=3) return "AE";
   if(avgPoints>0) return "BE";
   return "-";
 }
 function pointsToBand(pts){
   if(pts===null||pts===undefined) return "-";
-  if(pts>=7) return "EE"; if(pts>=5) return "ME"; if(pts>=3) return "AE"; if(pts>=1) return "BE";
+  // 4 points counts as Meeting Expectation (ME), not Approaching (AE).
+  if(pts>=7) return "EE"; if(pts>=4) return "ME"; if(pts>=3) return "AE"; if(pts>=1) return "BE";
   return "-";
 }
 function firstName(full){
@@ -524,6 +526,10 @@ function setSyncStatus(s){
   else el.innerHTML = "";
 }
 function firebaseReady(){ return SYNC_ENABLED && !!dbNS; }
+// syncPulled = we have successfully read (and merged in) the shared copy at
+// least once this session. Until then we must NOT push, or a phone that
+// opened offline could overwrite marks other teachers saved meanwhile.
+let syncPulled = false;
 async function ensureDb(){
   if(dbNS) return dbNS;
   if(typeof firebase === "undefined") return null;
@@ -542,10 +548,6 @@ async function ensureDb(){
   }catch(e){ dbNS = null; }
   return dbNS;
 }
-// syncPulled = we have successfully read (and merged in) the shared copy at
-// least once this session. Until then we must NOT push, or a phone that
-// opened offline could overwrite marks other teachers saved meanwhile.
-let syncPulled = false;
 function canPushCloud(){ return SYNC_ENABLED && !!dbNS && syncPulled && !syncApplyingRemote; }
 let downloadsNS = null;
 async function ensureDownloads(){
@@ -652,7 +654,7 @@ function docxTableXml(table){
     // needs to appear once, in the header) \u2014 the freed-up width goes
     // straight to the learner's NAME column instead.
     const noW = 500, nameW = 2300, summaryColW = 650;
-    const trailingCount = Math.max(0, fixedEntries.length - 2);
+    const trailingCount = Math.max(0, fixedEntries.length - 2); // minus NO + NAME
     const usedByFixed = noW + nameW + summaryColW * trailingCount;
     const restW = Math.max(350, Math.floor((usableWidthTwips - usedByFixed) / subjectSubCols));
     colWidths = Array(totalCols).fill(restW);
@@ -815,7 +817,7 @@ async function downloadReportPDF(filenameBase, btnEl){
   node.style.maxWidth = "none";
   restoreFns.push(()=>{ node.style.width = prevWidth; node.style.maxWidth = prevMaxWidth; });
 
-  let tempWrapper = null;
+  let tempWrappers = [];
   try{
     if(typeof html2canvas === "undefined" || !window.jspdf){
       showAlert("PDF tools are still loading \u2014 please wait a few seconds and try again.");
@@ -867,37 +869,40 @@ async function downloadReportPDF(filenameBase, btnEl){
       }
     };
 
-    // A report can mark a section boundary with class "print-page-break"
-    // (e.g. the Subject Analysis block) \u2014 when present, everything up to
-    // and including it becomes its own PDF page, and everything after it
-    // becomes a second page, instead of one continuous image sliced at
-    // an arbitrary height.
-    const breakEl = node.querySelector(".print-page-break");
-    if(breakEl){
-      // Subject Analysis (+ Best Learner per Learning Area) stays on its
-      // own single page, and the Mark List stays on its own single page
-      // too \u2014 both forced to landscape so the whole report has one
-      // consistent orientation, not a portrait page followed by landscape.
-      addCanvasAsPage(await captureEl(breakEl), true, true);
+    // A report can mark any number of section boundaries with class
+    // "print-page-break" (e.g. Subject Analysis as one page, Best
+    // Learner + Most Improved as another) \u2014 each marked block becomes
+    // its own PDF page, in order, and whatever trails after the LAST
+    // marker (e.g. the Mark List) becomes one final page \u2014 instead of
+    // one continuous image sliced at an arbitrary height.
+    const breakEls = Array.from(node.querySelectorAll(".print-page-break"));
+    if(breakEls.length){
+      // Every marked section, plus the trailing content, is forced to
+      // landscape so the whole report has one consistent orientation.
+      for(const el of breakEls){
+        addCanvasAsPage(await captureEl(el), true, true);
+      }
 
-      tempWrapper = document.createElement("div");
+      const lastBreakEl = breakEls[breakEls.length-1];
+      const trailingWrapper = document.createElement("div");
       // No fixed width yet \u2014 with white-space:nowrap now forcing the mark
       // list's cells onto single lines, the table needs to be measured
       // AFTER it's in the DOM to find out how wide it truly needs to be
       // (locking it to the old, narrower width would just push the
       // unwrapped content to overflow instead of actually fitting).
-      tempWrapper.style.cssText = `position:fixed;left:-99999px;top:0;background:#fff;display:inline-block;`;
-      let sib = breakEl.nextElementSibling;
+      trailingWrapper.style.cssText = `position:fixed;left:-99999px;top:0;background:#fff;display:inline-block;`;
+      let sib = lastBreakEl.nextElementSibling;
       while(sib){
         if(!(sib.classList && sib.classList.contains("no-print"))){
-          tempWrapper.appendChild(sib.cloneNode(true));
+          trailingWrapper.appendChild(sib.cloneNode(true));
         }
         sib = sib.nextElementSibling;
       }
-      document.body.appendChild(tempWrapper);
-      const wrapperWidth = Math.max(tempWrapper.scrollWidth, fullWidth);
-      tempWrapper.style.width = wrapperWidth + "px";
-      addCanvasAsPage(await captureEl(tempWrapper, wrapperWidth), true, true);
+      document.body.appendChild(trailingWrapper);
+      tempWrappers.push(trailingWrapper);
+      const wrapperWidth = Math.max(trailingWrapper.scrollWidth, fullWidth);
+      trailingWrapper.style.width = wrapperWidth + "px";
+      addCanvasAsPage(await captureEl(trailingWrapper, wrapperWidth), true, true);
     } else {
       addCanvasAsPage(await captureEl(node), !node.classList.contains("wide"));
     }
@@ -907,7 +912,7 @@ async function downloadReportPDF(filenameBase, btnEl){
   }catch(e){
     showAlert("Couldn't create the PDF. Please try again.");
   } finally {
-    if(tempWrapper && tempWrapper.parentNode) tempWrapper.parentNode.removeChild(tempWrapper);
+    tempWrappers.forEach(w => { if(w && w.parentNode) w.parentNode.removeChild(w); });
     restoreFns.reverse().forEach(fn=>fn());
     if(btnEl){ btnEl.disabled = false; btnEl.innerHTML = originalHTML; }
   }
@@ -2266,7 +2271,7 @@ function buildStudentReportCardHTML(studentId, opts){
           <div><b style="color:var(--navy-soft);">ASSESSMENT: </b>${assessmentLabel}</div>
           <div><b style="color:var(--navy-soft);">POSITION: </b>${row.position} out of ${rowsLen}</div>
         </div>
-        <p style="font-size:9px;color:var(--navy-soft);margin-bottom:10px;">POINTS SCALE: 90-100=8(EE) | 75-89=7(EE) | 58-74=6(ME) | 41-57=5(ME) | 31-40=4(AE) | 21-30=3(AE) | 11-20=2(BE) | 1-10=1(BE)</p>
+        <p style="font-size:9px;color:var(--navy-soft);margin-bottom:10px;">POINTS SCALE: 90-100=8(EE) | 75-89=7(EE) | 58-74=6(ME) | 41-57=5(ME) | 31-40=4(ME) | 21-30=3(AE) | 11-20=2(BE) | 1-10=1(BE)</p>
         <table style="margin-bottom:14px;font-size:9.5px;border-collapse:collapse;" class="report-marks-table">
           ${tableHead}
           <tbody>
